@@ -1,0 +1,38 @@
+========================================================================================================
+TRIVIAL CHEMISTRY BASELINES ON THE 25 DMS ASSAYS OF FINDINGS SECTION 18
+  mean Spearman across assays, and across protein clusters, with t intervals
+========================================================================================================
+scorer                                                 per assay (n=25)               per cluster (n=21)
+--------------------------------------------------------------------------------------------------------
+ESM-2 650M likelihood                    +0.465 [+0.391,+0.540] 25/25   +0.442 [+0.360,+0.524] 21/21
+NT-v2 50M likelihood                     -0.013 [-0.034,+0.008] 10/25   -0.012 [-0.034,+0.011]  9/21
+NT-v2 codon-marginalised                 -0.018 [-0.042,+0.006] 11/25   -0.017 [-0.042,+0.007]  9/21
+BLOSUM62 substitution score              +0.228 [+0.193,+0.263] 24/25   +0.218 [+0.180,+0.257] 20/21
+signed Kyte-Doolittle change             +0.175 [+0.142,+0.209] 25/25   +0.173 [+0.137,+0.209] 21/21
+signed residue-volume change             +0.028 [+0.002,+0.053] 16/25   +0.026 [-0.001,+0.054] 14/21
+-|hydropathy change|                     +0.140 [+0.115,+0.166] 24/25   +0.135 [+0.106,+0.164] 20/21
+-|volume change|                         +0.107 [+0.086,+0.127] 24/25   +0.100 [+0.077,+0.123] 20/21
+chem ridge, leave-one-cluster-out        +0.286 [+0.245,+0.326] 24/25   +0.276 [+0.231,+0.321] 20/21
+--------------------------------------------------------------------------------------------------------
+
+Two baselines, because they answer different questions.
+
+  ZERO-SHOT, the like-for-like comparison to a likelihood. BLOSUM62 alone,
+  no fitting and no model of any kind, reaches +0.228, which is 49% of ESM-2's
+  +0.465 and positive on 24/25 assays. ESM-2 minus BLOSUM62, paired: +0.237 [+0.178, +0.296], higher in 23/25.
+
+  FITTED, five chemistry scalars with weights learned on other protein
+  clusters and never on the test protein: +0.286, 61% of ESM-2. ESM-2 minus
+  that, paired: +0.179 [+0.120, +0.239], higher in 23/25.
+
+So roughly half to two thirds of the DMS signal usually credited to a protein
+language model is generic amino-acid chemistry that a lookup table already
+has. ESM-2's genuinely learned margin over the fitted chemistry baseline is
++0.179, not +0.465.
+
+The bar a genomic model has to clear is therefore +0.228 zero-shot, not +0.465.
+NT-v2 is at -0.013 and does not clear it: BLOSUM62 minus NT-v2, paired, +0.241 [+0.200, +0.283], higher in 24/25.
+Moving the bar does not rescue the genomic rung; it relocates the headline. The
+honest statement of section 18 is that a genomic LM scores below a substitution
+matrix, which is a stronger and cheaper claim than scoring below ESM-2.
+========================================================================================================

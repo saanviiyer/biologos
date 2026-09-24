@@ -1,0 +1,213 @@
+/Users/saanviiyer/Downloads/CALTECH/RESEARCH/crosstalk/scripts/analyze_memorisation_dna.py:148: RuntimeWarning: Mean of empty slice
+  mk = np.nanmean([r["mk5_nt"] for r in x])
+=== NT-v2 50M multi-species   results/memorisation_dna_nt50m.csv
+27787 span reconstructions over 720 windows of 3000 nt from 25 sources.
+L is the span length in NT 6-mer TOKENS; 6L nucleotides. L=10 tokens = 60 nt = 20 codons,
+the direct analogue of section 28's 20-residue span.
+
+--- 1. RECALL CURVES (random placement)
+arm                   g                     L=1                      L=2                      L=5                      L=10                     L=20                     L=40
+                                exact | tok | nt         exact | tok | nt         exact | tok | nt         exact | tok | nt         exact | tok | nt         exact | tok | nt
+member (train)       11  0.00341 | 0.0034 |0.3244  0.00000 | 0.0042 |0.3272  0.00152 | 0.0066 |0.3278  0.00000 | 0.0042 |0.3256  0.00000 | 0.0029 |0.3260  0.00000 | 0.0030 |0.3230
+nonmember (2025-26)  13  0.00615 | 0.0062 |0.3321  0.00481 | 0.0088 |0.3325  0.00000 | 0.0057 |0.3226  0.00000 | 0.0021 |0.3296  0.00000 | 0.0036 |0.3317  0.00000 | 0.0025 |0.3223
+M.albiziae (train)    1  0.00417 | 0.0042 |0.3417  0.00000 | 0.0063 |0.3351  0.00000 | 0.0017 |0.3335  0.00000 | 0.0042 |0.3367  0.00000 | 0.0052 |0.3349  0.00000 | 0.0034 |0.3287
+Mesorhizobium 2026    2  0.00833 | 0.0083 |0.3826  0.00417 | 0.0063 |0.3691  0.00000 | 0.0117 |0.3561  0.00000 | 0.0067 |0.3577  0.00000 | 0.0048 |0.3520  0.00000 | 0.0048 |0.3453
+CP002279 (unseen)     1  0.00833 | 0.0083 |0.3479  0.00000 | 0.0083 |0.3396  0.00000 | 0.0008 |0.3315  0.00000 | 0.0021 |0.3355  0.00000 | 0.0046 |0.3448  0.00000 | 0.0039 |0.3348
+member off-frame     11  0.00568 | 0.0057 |0.3441  0.00000 | 0.0047 |0.3318  0.00000 | 0.0057 |0.3337  0.00000 | 0.0038 |0.3286  0.00000 | 0.0040 |0.3266  0.00000 | 0.0030 |0.3212
+markov5 (matched)     2  0.00000 | 0.0000 |0.2986  0.00000 | 0.0021 |0.2995  0.00000 | 0.0021 |0.3037  0.00000 | 0.0010 |0.3058  0.00000 | 0.0014 |0.3083  0.00000 | 0.0013 |0.3102
+dinuc shuffle         2  0.00208 | 0.0021 |0.2885  0.00000 | 0.0010 |0.2957  0.00000 | 0.0008 |0.2911  0.00000 | 0.0008 |0.3011  0.00000 | 0.0015 |0.3055  0.00000 | 0.0014 |0.3072
+mono shuffle          2  0.00208 | 0.0021 |0.3035  0.00000 | 0.0010 |0.2896  0.00000 | 0.0004 |0.2919  0.00000 | 0.0013 |0.3032  0.00000 | 0.0007 |0.3027  0.00000 | 0.0006 |0.3051
+
+--- 2. TRIVIAL BASELINES on the identical spans
+    composition = always emit this window's commonest base.
+    markov5 = order-5 chain fitted to the SOURCE GENOME, greedy fill.
+arm                    L  model nt   markov5  composition  model-mk5  model-comp
+member (train)         1    0.3327    0.3143       0.3215    +0.0184     +0.0112
+member (train)         2    0.3357    0.3125       0.3215    +0.0232     +0.0142
+member (train)         5    0.3330    0.3136       0.3215    +0.0195     +0.0115
+member (train)        10    0.3299    0.3100       0.3215    +0.0198     +0.0084
+member (train)        20    0.3311    0.3056       0.3215    +0.0255     +0.0096
+member (train)        40    0.3280    0.3067       0.3215    +0.0213     +0.0065
+nonmember (2025-26)    1    0.3331    0.3323       0.3204    +0.0008     +0.0127
+nonmember (2025-26)    2    0.3325    0.3166       0.3204    +0.0159     +0.0121
+nonmember (2025-26)    5    0.3277    0.3070       0.3204    +0.0206     +0.0072
+nonmember (2025-26)   10    0.3309    0.3136       0.3204    +0.0173     +0.0105
+nonmember (2025-26)   20    0.3330    0.3108       0.3204    +0.0222     +0.0126
+nonmember (2025-26)   40    0.3235    0.3116       0.3204    +0.0120     +0.0031
+M.albiziae (train)     1    0.3417    0.3201       0.3170    +0.0215     +0.0247
+M.albiziae (train)     2    0.3351    0.3115       0.3170    +0.0236     +0.0181
+M.albiziae (train)     5    0.3335    0.3146       0.3170    +0.0189     +0.0165
+M.albiziae (train)    10    0.3367    0.3156       0.3170    +0.0212     +0.0197
+M.albiziae (train)    20    0.3349    0.3155       0.3170    +0.0194     +0.0179
+M.albiziae (train)    40    0.3287    0.3118       0.3170    +0.0169     +0.0117
+Mesorhizobium 2026     1    0.3826    0.3556       0.3260    +0.0271     +0.0566
+Mesorhizobium 2026     2    0.3691    0.3382       0.3260    +0.0309     +0.0431
+Mesorhizobium 2026     5    0.3561    0.3256       0.3260    +0.0306     +0.0301
+Mesorhizobium 2026    10    0.3577    0.3278       0.3260    +0.0299     +0.0317
+Mesorhizobium 2026    20    0.3520    0.3286       0.3260    +0.0234     +0.0259
+Mesorhizobium 2026    40    0.3453    0.3264       0.3260    +0.0189     +0.0193
+CP002279 (unseen)      1    0.3479    0.3250       0.3218    +0.0229     +0.0261
+CP002279 (unseen)      2    0.3396    0.3142       0.3218    +0.0253     +0.0177
+CP002279 (unseen)      5    0.3315    0.3329       0.3218    -0.0014     +0.0097
+CP002279 (unseen)     10    0.3355    0.3207       0.3218    +0.0148     +0.0136
+CP002279 (unseen)     20    0.3448    0.3237       0.3218    +0.0211     +0.0230
+CP002279 (unseen)     40    0.3348    0.3204       0.3218    +0.0144     +0.0130
+member off-frame       1    0.3441    0.3071       0.3162    +0.0369     +0.0278
+member off-frame       2    0.3318    0.3098       0.3162    +0.0219     +0.0155
+member off-frame       5    0.3337    0.3064       0.3162    +0.0273     +0.0175
+member off-frame      10    0.3286    0.3000       0.3162    +0.0285     +0.0123
+member off-frame      20    0.3266    0.3047       0.3162    +0.0218     +0.0103
+member off-frame      40    0.3212    0.3019       0.3162    +0.0192     +0.0049
+markov5 (matched)      1    0.2986       nan       0.3178       +nan     -0.0192
+markov5 (matched)      2    0.2995       nan       0.3178       +nan     -0.0183
+markov5 (matched)      5    0.3037       nan       0.3178       +nan     -0.0140
+markov5 (matched)     10    0.3058       nan       0.3178       +nan     -0.0119
+markov5 (matched)     20    0.3083       nan       0.3178       +nan     -0.0094
+markov5 (matched)     40    0.3102       nan       0.3178       +nan     -0.0076
+dinuc shuffle          1    0.2885       nan       0.3194       +nan     -0.0309
+dinuc shuffle          2    0.2957       nan       0.3194       +nan     -0.0238
+dinuc shuffle          5    0.2911       nan       0.3194       +nan     -0.0283
+dinuc shuffle         10    0.3011       nan       0.3194       +nan     -0.0183
+dinuc shuffle         20    0.3055       nan       0.3194       +nan     -0.0139
+dinuc shuffle         40    0.3072       nan       0.3194       +nan     -0.0123
+mono shuffle           1    0.3035       nan       0.3194       +nan     -0.0160
+mono shuffle           2    0.2896       nan       0.3194       +nan     -0.0298
+mono shuffle           5    0.2919       nan       0.3194       +nan     -0.0276
+mono shuffle          10    0.3032       nan       0.3194       +nan     -0.0162
+mono shuffle          20    0.3027       nan       0.3194       +nan     -0.0168
+mono shuffle          40    0.3051       nan       0.3194       +nan     -0.0144
+
+--- 3. MEMBERSHIP: verified in the NT-v2 corpus vs released after it
+    window pools GC-matched in 1% bins; permutation over GENOMES.
+  [all bacteria, GC-matched]  GC 0.5763 vs 0.5768
+    L= 1 per-nt accuracy          member   0.3244 [ 0.2956, 0.3530] (11g)  non   0.3321 [ 0.3165, 0.3481] (13g)  diff -0.0077 p=0.647
+    L=10 per-nt accuracy          member   0.3256 [ 0.3074, 0.3445] (11g)  non   0.3296 [ 0.3160, 0.3435] (13g)  diff -0.0040 p=0.747
+    L= 1 log p(true), nats/token  member  -8.2017 [-8.4836,-7.8978] (11g)  non  -8.2278 [-8.4129,-8.0295] (13g)  diff +0.0261 p=0.885
+    L=10 log p(true), nats/token  member  -7.8332 [-8.0375,-7.6122] (11g)  non  -7.8181 [-7.9537,-7.6677] (13g)  diff -0.0151 p=0.912
+  [genus-matched: M.albiziae vs Mesorhizobium 2026]  GC 0.6193 vs 0.6364
+    L= 1 per-nt accuracy          member   0.3417 [    nan,    nan] (1g)  non   0.3826 [ 0.3625, 0.4028] (2g)  diff -0.0410 p=nan
+    L=10 per-nt accuracy          member   0.3367 [    nan,    nan] (1g)  non   0.3577 [ 0.3575, 0.3579] (2g)  diff -0.0210 p=nan
+    L= 1 log p(true), nats/token  member  -7.9585 [    nan,    nan] (1g)  non  -7.6824 [-7.7500,-7.6147] (2g)  diff -0.2761 p=nan
+    L=10 log p(true), nats/token  member  -7.7051 [    nan,    nan] (1g)  non  -7.5519 [-7.5760,-7.5279] (2g)  diff -0.1532 p=nan
+  [genus-matched: M.albiziae vs CP002279]  GC 0.6193 vs 0.6260
+    L= 1 per-nt accuracy          member   0.3417 [    nan,    nan] (1g)  non   0.3479 [    nan,    nan] (1g)  diff -0.0062 p=nan
+    L=10 per-nt accuracy          member   0.3367 [    nan,    nan] (1g)  non   0.3355 [    nan,    nan] (1g)  diff +0.0013 p=nan
+    L= 1 log p(true), nats/token  member  -7.9585 [    nan,    nan] (1g)  non  -8.0928 [    nan,    nan] (1g)  diff +0.1343 p=nan
+    L=10 log p(true), nats/token  member  -7.7051 [    nan,    nan] (1g)  non  -7.6731 [    nan,    nan] (1g)  diff -0.0320 p=nan
+
+--- 4. LOSS-BASED MEMBERSHIP INFERENCE (the sensitive attack)
+    AUC of separating member from non-member WINDOWS. 0.5 = no signal.
+    'ratio' subtracts the order-5 reference model, the standard fix for
+    samples that are intrinsically easy rather than memorised.
+    [all bacteria, GC-matched] L= 1  AUC raw 0.522  AUC ratio 0.521   (136 vs 136 windows)
+    [all bacteria, GC-matched] L= 2  AUC raw 0.526  AUC ratio 0.541   (136 vs 136 windows)
+    [all bacteria, GC-matched] L= 5  AUC raw 0.540  AUC ratio 0.551   (136 vs 136 windows)
+    [all bacteria, GC-matched] L=10  AUC raw 0.494  AUC ratio 0.519   (136 vs 136 windows)
+    [all bacteria, GC-matched] L=20  AUC raw 0.527  AUC ratio 0.530   (136 vs 136 windows)
+    [all bacteria, GC-matched] L=40  AUC raw 0.501  AUC ratio 0.524   (136 vs 136 windows)
+    [genus-matched           ] L= 1  AUC raw 0.421  AUC ratio 0.435   (40 vs 40 windows)
+    [genus-matched           ] L= 2  AUC raw 0.464  AUC ratio 0.539   (40 vs 40 windows)
+    [genus-matched           ] L= 5  AUC raw 0.361  AUC ratio 0.389   (40 vs 40 windows)
+    [genus-matched           ] L=10  AUC raw 0.381  AUC ratio 0.412   (40 vs 40 windows)
+    [genus-matched           ] L=20  AUC raw 0.314  AUC ratio 0.372   (40 vs 40 windows)
+    [genus-matched           ] L=40  AUC raw 0.348  AUC ratio 0.468   (40 vs 40 windows)
+
+--- 5. INDEPENDENCE NULL and the SENSITIVITY of the recall test
+    p is per-TOKEN accuracy at that L. p^(6L) at nucleotide level is not
+    a valid null: one token emits 6 nucleotides in a single decision.
+    'ceiling' is the rule-of-three 95% upper bound on the exact-recovery
+    rate given 0 successes -- what the null can and cannot exclude.
+arm                    L   p_tok        p^L  observed     excess  hits     n  ceiling
+member (train)         1  0.0037   3.68e-03   0.00368       1.0x     3   816        -
+member (train)         2  0.0043   1.84e-05   0.00000         0x     0   816   0.0037
+member (train)         5  0.0069   1.52e-11   0.00123 80504563.6x     1   816        -
+member (train)        10  0.0045   3.67e-24   0.00000         0x     0   816   0.0037
+member (train)        20  0.0032   1.16e-50   0.00000         0x     0   816   0.0037
+member (train)        40  0.0032  1.35e-100   0.00000         0x     0   816   0.0037
+nonmember (2025-26)    1  0.0061   6.13e-03   0.00613       1.0x     5   816        -
+nonmember (2025-26)    2  0.0080   6.35e-05   0.00368      57.9x     3   816        -
+nonmember (2025-26)    5  0.0051   3.61e-12   0.00000         0x     0   816   0.0037
+nonmember (2025-26)   10  0.0021   1.54e-27   0.00000         0x     0   816   0.0037
+nonmember (2025-26)   20  0.0039   7.40e-49   0.00000         0x     0   816   0.0037
+nonmember (2025-26)   40  0.0027  1.70e-103   0.00000         0x     0   816   0.0037
+M.albiziae (train)     1  0.0042   4.17e-03   0.00417       1.0x     1   240        -
+M.albiziae (train)     2  0.0063   3.91e-05   0.00000         0x     0   240   0.0125
+M.albiziae (train)     5  0.0017   1.29e-14   0.00000         0x     0   240   0.0125
+M.albiziae (train)    10  0.0042   1.58e-24   0.00000         0x     0   240   0.0125
+M.albiziae (train)    20  0.0052   2.16e-46   0.00000         0x     0   240   0.0125
+M.albiziae (train)    40  0.0034   2.82e-99   0.00000         0x     0   240   0.0125
+Mesorhizobium 2026     1  0.0083   8.33e-03   0.00833       1.0x     2   240        -
+Mesorhizobium 2026     2  0.0063   3.91e-05   0.00417     106.7x     1   240        -
+Mesorhizobium 2026     5  0.0117   2.16e-10   0.00000         0x     0   240   0.0125
+Mesorhizobium 2026    10  0.0067   1.73e-22   0.00000         0x     0   240   0.0125
+Mesorhizobium 2026    20  0.0048   4.07e-47   0.00000         0x     0   240   0.0125
+Mesorhizobium 2026    40  0.0048   1.66e-93   0.00000         0x     0   240   0.0125
+CP002279 (unseen)      1  0.0083   8.33e-03   0.00833       1.0x     2   240        -
+CP002279 (unseen)      2  0.0083   6.94e-05   0.00000         0x     0   240   0.0125
+CP002279 (unseen)      5  0.0008   4.02e-16   0.00000         0x     0   240   0.0125
+CP002279 (unseen)     10  0.0021   1.54e-27   0.00000         0x     0   240   0.0125
+CP002279 (unseen)     20  0.0046   1.67e-47   0.00000         0x     0   240   0.0125
+CP002279 (unseen)     40  0.0039   2.74e-97   0.00000         0x     0   240   0.0125
+member off-frame       1  0.0057   5.68e-03   0.00568       1.0x     3   528        -
+member off-frame       2  0.0047   2.24e-05   0.00000         0x     0   528   0.0057
+member off-frame       5  0.0057   5.92e-12   0.00000         0x     0   528   0.0057
+member off-frame      10  0.0038   6.08e-25   0.00000         0x     0   528   0.0057
+member off-frame      20  0.0040   9.81e-49   0.00000         0x     0   528   0.0057
+member off-frame      40  0.0030  1.82e-101   0.00000         0x     0   528   0.0057
+markov5 (matched)      1  0.0000   0.00e+00   0.00000        n/a     0   480   0.0063
+markov5 (matched)      2  0.0021   4.34e-06   0.00000         0x     0   480   0.0063
+markov5 (matched)      5  0.0021   3.92e-14   0.00000         0x     0   480   0.0063
+markov5 (matched)     10  0.0010   1.50e-30   0.00000         0x     0   480   0.0063
+markov5 (matched)     20  0.0014   4.30e-58   0.00000         0x     0   480   0.0063
+markov5 (matched)     40  0.0013  7.52e-117   0.00000         0x     0   480   0.0063
+dinuc shuffle          1  0.0021   2.08e-03   0.00208       1.0x     1   480        -
+dinuc shuffle          2  0.0010   1.09e-06   0.00000         0x     0   480   0.0063
+dinuc shuffle          5  0.0008   4.02e-16   0.00000         0x     0   480   0.0063
+dinuc shuffle         10  0.0008   1.62e-31   0.00000         0x     0   480   0.0063
+dinuc shuffle         20  0.0015   1.89e-57   0.00000         0x     0   480   0.0063
+dinuc shuffle         40  0.0014  1.85e-115   0.00000         0x     0   480   0.0063
+mono shuffle           1  0.0021   2.08e-03   0.00208       1.0x     1   480        -
+mono shuffle           2  0.0010   1.09e-06   0.00000         0x     0   480   0.0063
+mono shuffle           5  0.0004   1.26e-17   0.00000         0x     0   480   0.0063
+mono shuffle          10  0.0013   9.31e-30   0.00000         0x     0   480   0.0063
+mono shuffle          20  0.0007   1.81e-63   0.00000         0x     0   480   0.0063
+mono shuffle          40  0.0006  6.84e-129   0.00000         0x     0   480   0.0063
+
+--- 6. LONGEST EXACT RUN inside the span (nucleotides): mean / max / span
+arm                            L=1            L=2            L=5            L=10           L=20           L=40
+member (train)        1.49/  6/  6  2.04/  7/ 12  3.02/ 30/ 30  3.54/ 11/ 60  4.31/ 19/120  4.94/ 16/240
+nonmember (2025-26)   1.47/  6/  6  2.06/ 12/ 12  2.93/ 21/ 30  3.58/ 13/ 60  4.37/ 13/120  4.90/ 18/240
+M.albiziae (train)    1.46/  6/  6  2.06/  8/ 12  2.85/  7/ 30  3.63/  8/ 60  4.49/ 11/120  4.97/ 11/240
+Mesorhizobium 2026    1.77/  6/  6  2.18/ 12/ 12  3.14/ 14/ 30  3.99/ 12/ 60  4.53/ 11/120  5.28/ 13/240
+CP002279 (unseen)     1.48/  6/  6  2.11/  7/ 12  2.85/  8/ 30  3.61/ 10/ 60  4.50/ 10/120  5.18/ 12/240
+member off-frame      1.49/  6/  6  2.08/  9/ 12  3.03/ 11/ 30  3.65/ 12/ 60  4.29/ 11/120  4.80/ 14/240
+markov5 (matched)     1.31/  5/  6  1.88/  6/ 12  2.70/  8/ 30  3.35/  9/ 60  4.04/ 10/120  4.69/ 10/240
+dinuc shuffle         1.30/  6/  6  1.82/  6/ 12  2.56/  7/ 30  3.26/  9/ 60  4.14/ 10/120  4.56/  9/240
+mono shuffle          1.34/  6/  6  1.79/  7/ 12  2.49/  7/ 30  3.18/  8/ 60  3.62/  8/120  4.29/  8/240
+
+--- 7. READING FRAME: token grid on vs off the one training used
+    L= 1 on-grid 0.3327  off-grid 0.3441  diff -0.0197 p=0.33
+    L= 2 on-grid 0.3357  off-grid 0.3318  diff -0.0046 p=0.789
+    L= 5 on-grid 0.3330  off-grid 0.3337  diff -0.0059 p=0.731
+    L=10 on-grid 0.3299  off-grid 0.3286  diff -0.0030 p=0.849
+    L=20 on-grid 0.3311  off-grid 0.3266  diff -0.0006 p=0.968
+    L=40 on-grid 0.3280  off-grid 0.3212  diff +0.0018 p=0.899
+
+--- 8. CODING vs NON-CODING (spans placed wholly inside / outside CDS)
+    CP002279 is 86.2% coding, M.albiziae 86.3%, so non-coding spans
+    longer than a few tokens barely exist in a bacterial chromosome.
+genome           L  coding nt  noncoding     diff  cod mk5  non mk5   n_c   n_n
+CP002279         1     0.3271     0.3018  +0.0253   0.2854   0.2804   160   148
+CP002279         2     0.3552     0.2979  +0.0573   0.3312   0.2849   160   148
+CP002279         5     0.3558     0.2886  +0.0673   0.3348   0.3014   160   143
+M.albiziae       1     0.3208     0.2853  +0.0356   0.3250   0.3056   160   156
+M.albiziae       2     0.3552     0.2965  +0.0587   0.3292   0.3162   160   156
+M.albiziae       5     0.3460     0.2784  +0.0676   0.3162   0.3075   160   156
+
+--- 9. WHAT THE MODEL DOES KNOW: real DNA against matched synthetic
+    L= 1 meso_member=0.3417  opportunistum=0.3479  markov5=0.2986  dinuc=0.2885  mono=0.3035  
+    L= 2 meso_member=0.3351  opportunistum=0.3396  markov5=0.2995  dinuc=0.2957  mono=0.2896  
+    L= 5 meso_member=0.3335  opportunistum=0.3315  markov5=0.3037  dinuc=0.2911  mono=0.2919  
+    L=10 meso_member=0.3367  opportunistum=0.3355  markov5=0.3058  dinuc=0.3011  mono=0.3032  
+    L=20 meso_member=0.3349  opportunistum=0.3448  markov5=0.3083  dinuc=0.3055  mono=0.3027  
+    L=40 meso_member=0.3287  opportunistum=0.3348  markov5=0.3102  dinuc=0.3072  mono=0.3051  

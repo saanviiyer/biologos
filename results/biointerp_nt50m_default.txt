@@ -1,0 +1,73 @@
+================================================================================================
+BIOINTERP BATTERY  |  InstaDeepAI/nucleotide-transformer-v2-50m-multi-species
+  masked LM, non-overlapping 6-mer tokens, dna alphabet  |  29 sequences, paired within sequence
+  scores are mean per-token log-likelihood; delta = real - intervened, nats/token
+================================================================================================
+
+intervention           probes                           delta              95% CI   real>       expected  verdict                   
+------------------------------------------------------------------------------------------------
+synonymous recode      codon-level surface form       +0.3300 [+0.1891,+0.4709]  25/29     indifferent  FAIL         SENSITIVE    
+codon-order shuffle    codon context                  +0.3415 [+0.1947,+0.4883]  23/29     real higher  PASS         REPRESENTS   
+frameshift +1          reading_frame                  +0.0264 [-0.0778,+0.1307]  14/29     real higher  FAIL         NULL         
+frameshift +2          reading_frame                  -0.0583 [-0.1702,+0.0535]  12/29     real higher  FAIL         NULL         
+reverse complement     strand                         -0.0643 [-0.1742,+0.0455]  11/29     real higher  FAIL         NULL         
+dinucleotide shuffle   structure above dinucleotide   +0.3545 [+0.1683,+0.5406]  21/29     real higher  PASS         REPRESENTS   
+mononucleotide shuffle structure above base composi   +0.4115 [+0.2401,+0.5829]  27/29     real higher  PASS         REPRESENTS   
+stop in frame          premature termination          +0.0428 [+0.0184,+0.0672]  25/29     real higher  PASS         REPRESENTS   
+stop out of frame      matched control for prematur   +0.0237 [-0.0084,+0.0558]  19/29     real higher  FAIL         NULL         
+
+reference effect ('mononucleotide shuffle') = +0.4115 nats/token. That is what this
+scorer demonstrably resolves on these 29 sequences, and every null below is bounded against it.
+
+------------------------------------------------------------------------------------------------
+MATCHED CONTRASTS -- two edits of equal size differing only in one property
+------------------------------------------------------------------------------------------------
+  frame-anchored stop: 'stop in frame' minus 'stop out of frame'
+      +0.0191 nats/token [-0.0047, +0.0430], 'stop in frame' scored lower in 18/29 (binomial p=0.265)   FAIL
+      -> it scores a premature stop the same as the identical bases written one nucleotide off, so it is not reading the sequence in any frame
+
+------------------------------------------------------------------------------------------------
+SEMANTIC PROPERTIES THIS MODEL DEMONSTRABLY REPRESENTS
+------------------------------------------------------------------------------------------------
+  + it distinguishes real sequence from base-composition noise
+      via 'mononucleotide shuffle': +0.4115 nats/token [+0.2401, +0.5829], real higher in 27/29 (binomial p=1.62e-06)
+  + it represents sequence structure above dinucleotide composition
+      via 'dinucleotide shuffle': +0.3545 nats/token [+0.1683, +0.5406], real higher in 21/29 (binomial p=0.0241)
+  + it represents local codon context
+      via 'codon-order shuffle': +0.3415 nats/token [+0.1947, +0.4883], real higher in 23/29 (binomial p=0.00232)
+  + it reads codon-level surface form: it prefers the native encoding of a protein over an equivalent one (so it is NOT invariant to it)
+      via 'synonymous recode': +0.3300 nats/token [+0.1891, +0.4709], real higher in 25/29 (binomial p=0.000104)
+  + it penalises a premature stop codon
+      via 'stop in frame': +0.0428 nats/token [+0.0184, +0.0672], real higher in 25/29 (binomial p=0.000104)
+
+------------------------------------------------------------------------------------------------
+BOUNDED NULLS AND INVARIANCES -- effects ruled out, not merely unobserved
+------------------------------------------------------------------------------------------------
+  - [FAIL] it cannot separate a gene from the same gene read out of frame, so its likelihood is not a protein-level quantity
+      via 'frameshift +1': +0.0264 nats/token [-0.0778, +0.1307], real higher in 14/29 (binomial p=1)
+      the interval rules out any effect above +0.1307, at most 32% of the reference effect
+  - [FAIL] it cannot separate a gene from its other out-of-frame reading
+      via 'frameshift +2': -0.0583 nats/token [-0.1702, +0.0535], real higher in 12/29 (binomial p=0.458)
+      the interval rules out any effect above +0.0535, at most 13% of the reference effect
+  - [FAIL] it does not distinguish a gene from its reverse complement
+      via 'reverse complement': -0.0643 nats/token [-0.1742, +0.0455], real higher in 11/29 (binomial p=0.265)
+      the interval rules out any effect above +0.0455, at most 11% of the reference effect
+  - [FAIL] it does not penalise the matched non-terminating edit
+      via 'stop out of frame': +0.0237 nats/token [-0.0084, +0.0558], real higher in 19/29 (binomial p=0.136)
+      the interval rules out any effect above +0.0558, at most 14% of the reference effect
+
+------------------------------------------------------------------------------------------------
+RELATIVE SENSITIVITY, each delta as a multiple of the reading-frame delta
+------------------------------------------------------------------------------------------------
+  synonymous recode          +12.48 x
+  codon-order shuffle        +12.91 x
+  frameshift +1               +1.00 x
+  frameshift +2               -2.21 x
+  reverse complement          -2.43 x
+  dinucleotide shuffle       +13.40 x
+  mononucleotide shuffle     +15.56 x
+  stop in frame               +1.62 x
+  stop out of frame           +0.90 x
+  A ratio far above 1 means the model reads that property more strongly than it
+  reads the reading frame, which is the property that determines the protein.
+================================================================================================

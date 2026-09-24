@@ -1,0 +1,72 @@
+================================================================================================
+BIOINTERP BATTERY  |  LongSafari/hyenadna-small-32k-seqlen-hf
+  autoregressive, single nucleotide tokens, dna alphabet  |  29 sequences, paired within sequence
+  scores are mean per-token log-likelihood; delta = real - intervened, nats/token
+================================================================================================
+
+intervention           probes                           delta              95% CI   real>       expected  verdict                   
+------------------------------------------------------------------------------------------------
+synonymous recode      codon-level surface form       +0.0555 [+0.0438,+0.0672]  28/29     indifferent  FAIL         SENSITIVE    
+codon-order shuffle    codon context                  +0.0265 [+0.0164,+0.0367]  23/29     real higher  PASS         REPRESENTS   
+frameshift +1          reading_frame                  -0.0003 [-0.0008,+0.0001]  12/29     real higher  FAIL         NULL         
+frameshift +2          reading_frame                  -0.0004 [-0.0009,+0.0001]  10/29     real higher  FAIL         NULL         
+reverse complement     strand                         +0.0000 [-0.0022,+0.0023]  18/29     real higher  FAIL         NULL         
+dinucleotide shuffle   structure above dinucleotide   +0.0135 [+0.0068,+0.0201]  24/29     real higher  PASS         REPRESENTS   
+mononucleotide shuffle structure above base composi   +0.0488 [+0.0366,+0.0610]  27/29     real higher  PASS         REPRESENTS   
+stop in frame          premature termination          +0.0015 [+0.0004,+0.0026]  23/29     real higher  PASS         REPRESENTS   
+stop out of frame      matched control for prematur   +0.0009 [+0.0000,+0.0018]  18/29     real higher  PASS         REPRESENTS   
+
+reference effect ('mononucleotide shuffle') = +0.0488 nats/token. That is what this
+scorer demonstrably resolves on these 29 sequences, and every null below is bounded against it.
+
+------------------------------------------------------------------------------------------------
+MATCHED CONTRASTS -- two edits of equal size differing only in one property
+------------------------------------------------------------------------------------------------
+  frame-anchored stop: 'stop in frame' minus 'stop out of frame'
+      +0.0006 nats/token [-0.0002, +0.0014], 'stop in frame' scored lower in 19/29 (binomial p=0.136)   FAIL
+      -> it scores a premature stop the same as the identical bases written one nucleotide off, so it is not reading the sequence in any frame
+
+------------------------------------------------------------------------------------------------
+SEMANTIC PROPERTIES THIS MODEL DEMONSTRABLY REPRESENTS
+------------------------------------------------------------------------------------------------
+  + it reads codon-level surface form: it prefers the native encoding of a protein over an equivalent one (so it is NOT invariant to it)
+      via 'synonymous recode': +0.0555 nats/token [+0.0438, +0.0672], real higher in 28/29 (binomial p=1.12e-07)
+  + it distinguishes real sequence from base-composition noise
+      via 'mononucleotide shuffle': +0.0488 nats/token [+0.0366, +0.0610], real higher in 27/29 (binomial p=1.62e-06)
+  + it represents local codon context
+      via 'codon-order shuffle': +0.0265 nats/token [+0.0164, +0.0367], real higher in 23/29 (binomial p=0.00232)
+  + it represents sequence structure above dinucleotide composition
+      via 'dinucleotide shuffle': +0.0135 nats/token [+0.0068, +0.0201], real higher in 24/29 (binomial p=0.000546)
+  + it penalises a premature stop codon
+      via 'stop in frame': +0.0015 nats/token [+0.0004, +0.0026], real higher in 23/29 (binomial p=0.00232)
+  + it penalises the matched non-terminating edit
+      via 'stop out of frame': +0.0009 nats/token [+0.0000, +0.0018], real higher in 18/29 (binomial p=0.265)
+
+------------------------------------------------------------------------------------------------
+BOUNDED NULLS AND INVARIANCES -- effects ruled out, not merely unobserved
+------------------------------------------------------------------------------------------------
+  - [FAIL] it cannot separate a gene from the same gene read out of frame, so its likelihood is not a protein-level quantity
+      via 'frameshift +1': -0.0003 nats/token [-0.0008, +0.0001], real higher in 12/29 (binomial p=0.458)
+      the interval rules out any effect above +0.0001, at most 0% of the reference effect
+  - [FAIL] it cannot separate a gene from its other out-of-frame reading
+      via 'frameshift +2': -0.0004 nats/token [-0.0009, +0.0001], real higher in 10/29 (binomial p=0.136)
+      the interval rules out any effect above +0.0001, at most 0% of the reference effect
+  - [FAIL] it does not distinguish a gene from its reverse complement
+      via 'reverse complement': +0.0000 nats/token [-0.0022, +0.0023], real higher in 18/29 (binomial p=0.265)
+      the interval rules out any effect above +0.0023, at most 5% of the reference effect
+
+------------------------------------------------------------------------------------------------
+RELATIVE SENSITIVITY, each delta as a multiple of the reading-frame delta
+------------------------------------------------------------------------------------------------
+  synonymous recode         -163.64 x
+  codon-order shuffle        -78.26 x
+  frameshift +1               +1.00 x
+  frameshift +2               +1.22 x
+  reverse complement          -0.05 x
+  dinucleotide shuffle       -39.66 x
+  mononucleotide shuffle    -143.81 x
+  stop in frame               -4.50 x
+  stop out of frame           -2.70 x
+  A ratio far above 1 means the model reads that property more strongly than it
+  reads the reading frame, which is the property that determines the protein.
+================================================================================================

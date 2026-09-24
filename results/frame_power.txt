@@ -1,0 +1,57 @@
+======================================================================================================================
+MATCHED IN-FRAME / OUT-OF-FRAME STOP CONTRAST, ALL MODELS, 24 UNIQUE CDS
+  the confound-free probe: two 3-base edits, same trinucleotide, differing only in phase
+  every effect divided by that model's own reference effect (mononucleotide
+  shuffle), because nats/token are not comparable across a 6-mer, a single
+  nucleotide and an amino-acid tokenizer
+======================================================================================================================
+model                                          n    effect     as % of that model reference   MDE %   signs     verdict
+----------------------------------------------------------------------------------------------------------------------
+Markov order-2 3-PERIODIC (positive control)  24   +0.0035    +3.42% [  +2.63%,  +4.20%]   1.11%   24/24  REPRESENTS
+Markov order-2 aperiodic (negative control)   24   -0.0002    -0.54% [  -1.28%,  +0.20%]   1.04%   11/24        NULL
+NT-v2 50M                                     24   +0.0185    +4.38% [  -2.83%, +11.59%]  10.20%   14/24        NULL
+HyenaDNA 32k                                  24   +0.0006    +1.21% [  -0.93%,  +3.35%]   3.02%   14/24        NULL
+ESM-2 35M                                      9   +0.0504    +4.88% [  +1.47%,  +8.29%]   4.73%     8/9  REPRESENTS
+----------------------------------------------------------------------------------------------------------------------
+
+The positive control shows 3.42% of its own reference on this probe.
+Read every null against that number, not against zero:
+
+  NT-v2 50M      UNDERPOWERED. Its interval reaches 11.59% of its own
+                 reference, ABOVE the 3.42% the positive control shows, so a
+                 frame effect that size would not have been detected. This null
+                 does not exclude frame representation. It would take about
+                 214 unique coding sequences to bound it there.
+  HyenaDNA 32k   BOUNDED NULL. Its interval tops out at 3.35% of its
+                 own reference, below the 3.42% a frame-representing model
+                 shows, so an effect that size is excluded (1.0x margin).
+  ESM-2 35M      DETECTS it, at 4.88% of its reference.
+
+======================================================================================================================
+FRAMESHIFT +1 (CYCLIC ROTATION), ALL MODELS, 24 UNIQUE CDS
+  the high-gain probe, but the one the section-26 retraction showed is confounded:
+  every effect divided by that model's own reference effect (mononucleotide
+  shuffle), because nats/token are not comparable across a 6-mer, a single
+  nucleotide and an amino-acid tokenizer
+======================================================================================================================
+model                                          n    effect     as % of that model reference   MDE %   signs     verdict
+----------------------------------------------------------------------------------------------------------------------
+Markov order-2 3-PERIODIC (positive control)  24   +0.0861   +83.56% [ +67.99%, +99.14%]  22.03%   23/24  REPRESENTS
+Markov order-2 aperiodic (negative control)   24   -0.0001    -0.20% [  -0.39%,  -0.02%]   0.26%   10/24    INVERTED
+NT-v2 50M                                     24   +0.0505   +11.98% [ -18.40%, +42.36%]  42.97%   13/24        NULL
+HyenaDNA 32k                                  24   -0.0002    -0.48% [  -1.66%,  +0.71%]   1.67%   12/24        NULL
+ESM-2 35M                                      9   +0.9101   +88.17% [ +51.58%,+124.76%]  50.69%     9/9  REPRESENTS
+----------------------------------------------------------------------------------------------------------------------
+
+The positive control shows 83.56% of its own reference on this probe.
+Read every null against that number, not against zero:
+
+  NT-v2 50M      BOUNDED NULL. Its interval tops out at 42.36% of its
+                 own reference, below the 83.56% a frame-representing model
+                 shows, so an effect that size is excluded (2.0x margin).
+  HyenaDNA 32k   BOUNDED NULL. Its interval tops out at 0.71% of its
+                 own reference, below the 83.56% a frame-representing model
+                 shows, so an effect that size is excluded (118.5x margin).
+  ESM-2 35M      DETECTS it, at 88.17% of its reference.
+
+======================================================================================================================
