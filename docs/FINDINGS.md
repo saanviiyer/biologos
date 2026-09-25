@@ -1266,3 +1266,70 @@ at the larger scale rather than a larger model.
 This is the same failure mode as sections 26 and 35 in a third place: a signal that
 looks real until the matched control is applied, and this time the control was
 present in the design but degraded in execution.
+
+## 38. Evo 2's context arm never had specificity signal to explain
+
+Section 35 left one item outstanding: Evo 2's context dose-response was reported as
+a +0.70 trend with no composition-matched control, after shuffled flanks had
+reproduced both NT-v2's negative trend and HyenaDNA's positive one. The control is
+now built (`scripts/make_evo2_context_control.py`, which emits a standalone
+`evo2_context_control.py` for a CUDA host) and validated against the published arm:
+it reproduces all five AUCs to 1e-12 and its real flanks are bit-exact slices of
+CP002279. It has not been run, because Evo 2 7B needs a GPU this machine does not
+have.
+
+Three checks on the per-variant score arrays, which needed no new GPU time, change
+what the control is for.
+
+**No arm carries specificity signal above chance.** On the same 399-variant
+discrimination set (235 specific, 164 promiscuous):
+
+| flank | AUC | 95% CI | vs chance |
+|---|---|---|---|
+| 0 nt | 0.4006 | [0.345, 0.456] | **below** chance |
+| 300 nt | 0.5211 | [0.465, 0.578] | indistinguishable |
+| 1200 nt | 0.5374 | [0.481, 0.593] | indistinguishable |
+| 3000 nt | 0.5426 | [0.486, 0.599] | indistinguishable |
+| 5400 nt | 0.5368 | [0.481, 0.593] | indistinguishable |
+
+The bare CDS is significantly *anti*-predictive. Every flanked arm is
+indistinguishable from chance. So the dose-response runs from anti-predictive to
+chance, and no arm on the curve has specificity signal that context could be
+credited with supplying.
+
+**The +0.70 is one step, and it is not significant.** Exact permutation over all
+120 orderings of five points gives p = 0.1167. Dropping the 0 nt point, the trend
+among arms that actually have context is +0.400 with p = 0.375 over 24 orderings.
+Paired bootstrap on the same resamples: 300 vs 0 nt is +0.1204 [+0.091, +0.150],
+5400 vs 300 nt is +0.0157 [+0.0007, +0.0313], and 5400 vs 1200 nt is -0.0006
+[-0.016, +0.015]. An 18x increase in context past the first increment buys +0.016
+of AUC and then nothing.
+
+**300 nt and 5400 nt are the same measurement.** Per-variant score arrays
+correlate at rho +0.963 across all 7,882 variants, and the flanked arms sit at
++0.959 to +0.981 with each other. Whatever the flank contributes saturates
+immediately.
+
+**The AUC change is the non-cognate correlation falling, not the cognate one
+rising.** rho with cognate fitness is flat at +0.47 across every flank including
+zero (+0.473, +0.490, +0.466, +0.467, +0.468). rho with non-cognate fitness drops
++0.363 to +0.240 at the first increment and then sits flat (+0.206, +0.216,
++0.219). Adding a prefix decouples the score from the wrong partner's fitness
+while leaving the right partner's untouched.
+
+**Therefore the control now tests a narrower thing, and one that matters less.**
+Not "does long-range genomic context carry specificity signal", which is answered
+no by the chance test above, but "is the single 300 nt step genomic at all". Point
+four is the reason to expect it is not: the effect appears in full at the shortest
+flank and is a decoupling rather than an acquisition, which is what having any
+prefix to condition on would do. Until the control runs, **do not cite Evo 2's
++0.70 as a context dose-response.** The defensible statement is that no Evo 2
+context arm discriminates specificity above chance, which does not depend on the
+control at all.
+
+The job scores the 399 discrimination variants instead of all 7,882, a 20x saving
+that changes no reported number because the published AUCs are read off that subset
+already: 21 arms, 8,379 sequences, 41.9M tokens, against 167M for the original
+context arms. The runner and its analyzer live with the ParD3 landscape they need,
+which this repository does not vendor. The table is
+`results/evo2_context_analysis.csv`.

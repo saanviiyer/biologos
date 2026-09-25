@@ -62,6 +62,14 @@ a 30 kb window produces a clean *positive* trend of +0.536 that its shuffled twi
 fully account for. Context trends on this landscape run in both directions from
 noise. See section 35.
 
+Evo 2's own +0.70 trend was the last one standing without a shuffled control, and
+it dissolves for a different reason. The bare coding sequence scores 0.401 AUC,
+significantly *below* chance, and every flanked arm sits at 0.52 to 0.54 with a
+confidence interval containing 0.5. The trend runs from anti-predictive to chance,
+so no arm on it has specificity signal that context could be credited with
+supplying. Over five points the +0.70 carries an exact permutation p of 0.117, and
+300 nt and 5400 nt of flank correlate at +0.963. See section 38.
+
 **A general claim was too general.** "A genomic model carries no protein-fitness
 signal" held for the Nucleotide Transformer family and was written as though it
 held for genomic models. Evo 2 refutes it. See section 30.
@@ -73,7 +81,7 @@ held for genomic models. Evo 2 refutes it. See section 30.
 | Does genomic-LM likelihood predict protein fitness? | No for NT at four scales; yes but sub-baseline for Evo 2 | 18, 20, 30 |
 | Is that a scaling phenomenon? | No. The NT trend under-predicts Evo 2 by 11x | 31 |
 | Does the genomic representation carry protein-level information? | No. The signal survives frameshift and reverse complement | 17 |
-| Does more genomic context help? | Unresolved. Both signs reproduce from shuffled flanks | 19, 35 |
+| Does more genomic context help? | No. No Evo 2 context arm beats chance, and both NT signs reproduce from shuffled flanks | 19, 35, 38 |
 | Does a genomic model memorise its training genomes? | No membership signal at 50M; confounded and open at 500M | 32, 36 |
 | How good is a genomic model at DNA itself? | 50M beats an order-5 Markov chain by 2 points; 500M by 13 | 32, 36 |
 | Do genomic models beat a lookup table on regulatory tasks? | Mostly no. Two wins under 0.03 AUC against one loss of 0.20 | 34 |
