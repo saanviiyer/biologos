@@ -21,8 +21,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from crosstalk import glm
-from crosstalk.biointerp import (DEFAULT_BATTERY, SECTION_26_BATTERY, run_battery,
+from biologos import glm
+from biologos.biointerp import (DEFAULT_BATTERY, SECTION_26_BATTERY, run_battery,
                                  render, scorers, write_csv, write_per_sequence_csv,
                                  write_contrast_csv)
 

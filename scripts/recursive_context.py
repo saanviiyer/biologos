@@ -234,8 +234,8 @@ class MarkovScorer:
         return np.stack(out)
 
     def score_variants_masked_marginal(self, variants, seq: str, cds_offset: int = 0):
-        from crosstalk.boltz import MUT_POSITIONS, PARD3
-        from crosstalk.glm import preferred_codons
+        from biologos.boltz import MUT_POSITIONS, PARD3
+        from biologos.glm import preferred_codons
         tps, slots = zip(*[self.token_index(cds_offset, p) for p in MUT_POSITIONS])
         lp = self._masked_logprobs(seq, list(tps))
         wt_tokens = [seq[tp * self.k:(tp + 1) * self.k] for tp in tps]

@@ -1,4 +1,3 @@
-/Users/saanviiyer/Downloads/CALTECH/RESEARCH/crosstalk/scripts/analyze_memorisation_dna.py:148: RuntimeWarning: Mean of empty slice
   mk = np.nanmean([r["mk5_nt"] for r in x])
 === NT-v2 50M multi-species   results/memorisation_dna_nt50m.csv
 27787 span reconstructions over 720 windows of 3000 nt from 25 sources.

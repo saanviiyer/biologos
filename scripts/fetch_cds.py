@@ -4,7 +4,7 @@
 The genomic rung of the proxy ladder scores DNA, so it needs the actual CDS the
 organism uses, not a reverse translation invented here. Every CDS is verified by
 translating it and requiring an exact match to the protein sequence already
-pinned in crosstalk.boltz -- a silent frameshift or a wrong paralog would look
+pinned in biologos.boltz -- a silent frameshift or a wrong paralog would look
 like a modelling result rather than a data error.
 
 Route: UniProt JSON -> EMBL cross-reference ProteinId -> ENA CDS fasta.
@@ -13,7 +13,7 @@ import json, sys, time, urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from crosstalk.boltz import PARD3, PARE3, PARD2, PARE2
+from biologos.boltz import PARD3, PARE3, PARD2, PARE2
 
 ACCESSIONS = {"ParD3": ("F7YBW8", PARD3), "ParE3": ("F7YBW7", PARE3),
               "ParD2": ("F7Y4V9", PARD2), "ParE2": ("F7Y4W0", PARE2)}

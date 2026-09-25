@@ -19,7 +19,7 @@ and therefore share a DMS score exactly. That spread is a per-assay ceiling on
 how well any genomic-LM proxy could correlate, and it is not something the
 protein side can be charged with.
 """
-import argparse, csv, json, sys
+import os, argparse, csv, json, sys
 from pathlib import Path
 
 import numpy as np
@@ -28,10 +28,10 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "scripts"))
 
-from crosstalk import glm
+from biologos import glm
 from run_proxy_ladder import spearman
 
-GAUNTLET = Path("/Users/saanviiyer/Downloads/CALTECH/RESEARCH/gauntlet/data/proteingym")
+GAUNTLET = Path(os.environ.get("PROTEINGYM_DIR", ROOT / "data/proteingym"))
 
 
 def load_singles(dms_id, target_seq):

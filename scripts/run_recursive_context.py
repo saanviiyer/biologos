@@ -41,8 +41,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "scripts"))
 
-from crosstalk.landscape import load_pard3
-from crosstalk import glm
+from biologos.landscape import load_pard3
+from biologos import glm
 from run_proxy_ladder import auc, boot_ci, spearman
 from run_genomic_rung import discrimination_set
 from recursive_context import (CHUNK, AGGREGATIONS, MarkovScorer, aggregate,
@@ -94,7 +94,7 @@ def main():
     print(f"chunk {args.chunk} nt/side, aggregation headline = MEAN "
           f"(pre-registered); max flank {args.max_flank:,} nt/side\n", flush=True)
 
-    from crosstalk.boltz import MUT_POSITIONS, PARD3
+    from biologos.boltz import MUT_POSITIONS, PARD3
     wt_code = "".join(PARD3[p - 1] for p in MUT_POSITIONS)
     nmut = np.array([sum(a != b for a, b in zip(v, wt_code)) for v in variants], float)
     base_auc = auc(-nmut[mask], lab)

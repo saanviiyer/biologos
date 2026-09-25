@@ -33,7 +33,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "scripts"))
-from crosstalk import glm
+from biologos import glm
 
 COMP = str.maketrans("ACGT", "TGCA")
 

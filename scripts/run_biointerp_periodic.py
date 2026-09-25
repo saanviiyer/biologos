@@ -37,10 +37,10 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from crosstalk import glm
-from crosstalk.biointerp import (DEFAULT_BATTERY, run_battery, render, scorers,
+from biologos import glm
+from biologos.biointerp import (DEFAULT_BATTERY, run_battery, render, scorers,
                                  write_csv, write_per_sequence_csv, write_contrast_csv)
-from crosstalk.biointerp.battery import _tcrit
+from biologos.biointerp.battery import _tcrit
 
 
 def load_unique(max_nt=2400, min_nt=200) -> dict:

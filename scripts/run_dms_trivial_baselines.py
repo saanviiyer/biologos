@@ -36,7 +36,7 @@ from run_proxy_ladder import spearman
 from run_dms_transfer import load_singles, GAUNTLET
 from run_skempi_transfer import trivial_features, zscore
 from run_readout_probe import ridge_fit, ridge_pred
-from crosstalk.biointerp.battery import _tcrit
+from biologos.biointerp.battery import _tcrit
 
 
 class _Muts:

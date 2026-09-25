@@ -14,7 +14,7 @@ suggested: Nucleotide Transformer v2 turned out unable to separate a gene from
 the same gene rotated one nucleotide, while penalising codon-order disruption
 twelve times more strongly.
 
-    from crosstalk.biointerp import scorers, run_battery, render
+    from biologos.biointerp import scorers, run_battery, render
     rep = run_battery(scorers.NTScorer(), {"gene1": cds, ...})
     print(render(rep))
 

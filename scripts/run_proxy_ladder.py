@@ -12,9 +12,9 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from crosstalk.boltz import MUT_POSITIONS, PARD3
-from crosstalk.landscape import load_pard3
-from crosstalk.plm import ESMScorer, complex_context
+from biologos.boltz import MUT_POSITIONS, PARD3
+from biologos.landscape import load_pard3
+from biologos.plm import ESMScorer, complex_context
 
 LADDER = ["facebook/esm2_t6_8M_UR50D", "facebook/esm2_t12_35M_UR50D",
           "facebook/esm2_t30_150M_UR50D", "facebook/esm2_t33_650M_UR50D"]

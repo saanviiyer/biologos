@@ -18,7 +18,7 @@ far off the NT curve, transfer is an architecture and corpus phenomenon that sca
 alone does not buy, which is the genomic analogue of the point [Liu2024mobilellm]
 makes for sub-billion language models.
 """
-import csv, sys
+import os, csv, sys
 from pathlib import Path
 
 import numpy as np
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "scripts"))
 from run_proxy_ladder import spearman
 
-HANDOFF = Path("/Users/saanviiyer/Downloads/evo2_crosstalk_handoff/results/evo2_dms.csv")
+HANDOFF = Path(os.environ.get("EVO2_RESULTS", ROOT / "results/evo2_dms.csv"))
 PARAMS = {"50m": 50e6, "100m": 100e6, "250m": 250e6, "500m": 500e6}
 BLOSUM62, ESM2 = 0.2282, 0.4655          # measured on the same 25 assays
 

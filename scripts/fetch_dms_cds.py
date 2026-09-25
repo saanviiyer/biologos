@@ -12,14 +12,14 @@ match is recorded so variant codons can be placed correctly. Anything that does
 not verify is dropped and listed, because a silently mismatched CDS would look
 like a genomic model failing rather than a join failing.
 """
-import csv, json, sys
+import os, csv, json, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from fetch_cds import embl_protein_ids, ena_cds, translate
 
-GAUNTLET = Path("/Users/saanviiyer/Downloads/CALTECH/RESEARCH/gauntlet/data/proteingym")
+GAUNTLET = Path(os.environ.get("PROTEINGYM_DIR", ROOT / "data/proteingym"))
 
 
 def main():

@@ -119,7 +119,13 @@ Genomic-model code needs `transformers==4.44.2`. Version 5 removes
 Nucleotide Transformer v2's bundled remote code reads, and the failure looks like a
 missing model, not a version skew.
 
+Point `PROTEINGYM_DIR` at a local ProteinGym checkout holding `reference.csv` and
+an `assays/` directory of per-assay CSVs. It defaults to `data/proteingym`, which
+is not vendored. Per-assay Evo 2 correlations ship in `results/evo2_dms.csv`, so
+the scaling analysis runs with no GPU and no download.
+
 ```bash
+export PROTEINGYM_DIR=/path/to/proteingym
 python scripts/fetch_cds.py              # verified coding sequences, ENA
 python scripts/build_genomic_context.py  # genome and operon context
 python scripts/run_dms_transfer.py       # the headline comparison

@@ -40,7 +40,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 import memdna_data as D
-from crosstalk.glm import _device, _nt_config, _patch_transformers_for_nt_v2
+from biologos.glm import _device, _nt_config, _patch_transformers_for_nt_v2
 
 FIELDS = ["wid", "arm", "genome", "contig", "start", "gc", "L", "span_start",
           "placement", "cds_frac", "exact", "tok_acc", "nt_acc", "max_run_nt",

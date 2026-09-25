@@ -26,9 +26,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from crosstalk.boltz import MUT_POSITIONS, PARD3
-from crosstalk.landscape import load_pard3
-from crosstalk import glm
+from biologos.boltz import MUT_POSITIONS, PARD3
+from biologos.landscape import load_pard3
+from biologos import glm
 from run_proxy_ladder import auc, boot_ci, spearman
 
 NT_MODELS = ["InstaDeepAI/nucleotide-transformer-v2-50m-multi-species"]

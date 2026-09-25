@@ -27,8 +27,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "scripts"))
 
-from crosstalk.biointerp import rebuild_from_csv, run_battery, scorers, DEFAULT_BATTERY
-from crosstalk.biointerp.battery import _tcrit
+from biologos.biointerp import rebuild_from_csv, run_battery, scorers, DEFAULT_BATTERY
+from biologos.biointerp.battery import _tcrit
 from run_biointerp_dedup import cds_map, unique_keys
 from run_biointerp_periodic import load_unique
 
