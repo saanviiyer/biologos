@@ -1,0 +1,548 @@
+\documentclass{article}
+\usepackage{icml2027}
+\usepackage{booktabs,amsmath,amssymb,graphicx,xcolor,microtype,url}
+\usepackage[hidelinks]{hyperref}
+
+\icmltitlerunning{Transfer That Survives Its Controls}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Transfer That Survives Its Controls:\\
+A Validity Protocol for Cross-Representation Claims in Biological Sequence Models}
+\icmlsetsymbol{equal}{*}
+\begin{icmlauthorlist}
+\icmlauthor{Saanvi Skanda Subramanian}{caltech}
+\end{icmlauthorlist}
+\icmlaffiliation{caltech}{Computation and Neural Systems, California Institute of Technology}
+\icmlcorrespondingauthor{Saanvi Skanda Subramanian}{ssubramanian@caltech.edu}
+\icmlkeywords{evaluation, scientific machine learning, protein language models, genomic language models}
+\vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+DNA and protein are two encodings of one molecule related by a map that is exactly
+known. This makes biological sequence models an unusually sharp setting for a
+question the rest of machine learning can only ask loosely: when a model trained
+on one representation appears to know something about another, is that transfer,
+or an artifact of how the question was posed? We give four controls that decide
+this, each cheap and each reusable outside biology, and apply them to genomic and
+protein language models. The controls are a noise ceiling read off the model's own
+violation of an invariance it should respect, a pair of manipulations that destroy
+the representation map while preserving surface statistics, composition-matched
+context twins, and trivial baselines scored under correlated-unit accounting.
+Applying them overturns four published or prior claims, three of them our own. A
+genomic representation that scored $\rho=+0.141$ on held-out residues, read as
+weak transfer, scores $+0.143$ after its reading frame is destroyed and $+0.129$ on
+the reverse complement. A context dose-response is reproduced in both directions by
+flanks carrying no genomic information. Across 25 deep mutational scanning assays
+in 9 organisms, the surviving picture is that genomic-to-protein transfer is a
+property of architecture and corpus and not of scale: the Nucleotide Transformer
+family is flat at $-0.013$ over four sizes, Evo~2 7B reaches $+0.266$ but is
+statistically indistinguishable from BLOSUM62 at $+0.228$, and the Nucleotide
+Transformer scaling trend under-predicts Evo~2 by a factor of eleven. Released checkpoints let us separate two
+candidate explanations at matched architecture: codon-aligned tokenization and a
+thousandfold increase in training-corpus diversity each leave the result unchanged,
+with paired differences of $+0.016$ and $+0.005$ that both contain zero. We report
+the cost of each control in model evaluations so that the protocol can be adopted
+without a compute argument.
+\end{abstract}
+
+\section{Introduction}
+
+Claims that a model trained on one representation has learned something about
+another are common and consequential. A genomic language model that scored protein
+fitness would let practitioners rank variants without a protein model, and would be
+evidence that the model had internalised the genetic code and not merely nucleotide
+statistics. Similar claims are made for multimodal encoders, for code models
+reasoning about natural language, and for any system said to have acquired a
+capability it was not trained on.
+
+These claims are hard to check because the representations are not independent.
+Under any encoding rule the codon determines the amino acid, so the nucleotides at
+a substituted site already \emph{are} residue identity. A probe that recovers
+residue identity from DNA has not demonstrated a protein-level representation; it
+has read a lookup table. The difficulty is general. Whenever representation $A$
+determines property $P$ of modality $B$ by a known map, a measurement that claims
+$A$ encodes $P$ ``at the level of $B$'' must rule out the map itself.
+
+Our contribution is a protocol that rules it out, and a case study where applying
+it changes the conclusion four times. We state the protocol first because it is the
+reusable part.
+
+\paragraph{Contributions.}
+\begin{enumerate}\itemsep0pt
+\item \textbf{A noise ceiling obtained from the model, not the data}
+(Section~\ref{sec:ceiling}). When many inputs must share a label by construction,
+the spread of model scores across them bounds the correlation any proxy built on
+that model could achieve. For genomic models scoring coding sequences, synonymous
+encodings supply this set at no extra cost, since a single masked pass already
+prices every alternative. The resulting attenuation ceiling is $0.900$, so a null
+at $-0.013$ cannot be attributed to measurement noise. Without such a ceiling a
+null states nothing.
+\item \textbf{Map-destroying controls} (Section~\ref{sec:map}). Frameshifting and
+reverse-complementing destroy the DNA-to-protein map while leaving the sequence a
+plausible genomic string. A representation that is protein-level must lose its
+signal under both. The claim we tested did not.
+\item \textbf{Composition-matched context twins} (Section~\ref{sec:context}).
+Context dose-response curves are reproduced by flanks matched on mononucleotide or
+dinucleotide composition and carrying no genomic information, in both directions of
+sign.
+\item \textbf{Trivial baselines under correlated-unit accounting}
+(Section~\ref{sec:trivial}). BLOSUM62 alone reaches 49\% of ESM-2 across the same
+assays. A 60-parameter one-hot vector aligns with ESM-2 better than a genomic model
+does. On the genomic models' own benchmark tasks a positional one-hot wins
+outright. 194 ProteinGym assays are 165 independent proteins and must be counted
+as such.
+\item \textbf{The case study}: genomic-to-protein transfer is an architecture and
+corpus property, not a scaling one (Section~\ref{sec:scale}).
+\end{enumerate}
+
+We report four retractions of our own earlier claims in Section~\ref{sec:retract}.
+We do this in the body, not an appendix, because the protocol's value is
+precisely that it caught them, and because a reader deciding whether to adopt it
+should see what it costs to not have had it.
+
+\section{Related Work}
+
+\paragraph{Protein and genomic language models.} ESM-2 \citep{lin2023esm2} and
+ESM-C established masked protein language models as zero-shot variant-effect
+predictors, evaluated at scale by ProteinGym \citep{notin2023proteingym}. On the
+nucleotide side, the Nucleotide Transformer \citep{dalla2024nucleotide}, HyenaDNA
+\citep{nguyen2023hyenadna} and Evo~2 \citep{brixi2025evo2} model genomes directly.
+Evo and Evo~2 have been used to design functional sequences
+\citep{merchant2025evo,king2026phage}, though in the latter case through
+inference-time guidance from separate predictive models and not bare likelihood
+ranking.
+
+\paragraph{Genomic models on protein tasks.} \citet{boshar2024glm} ask our question
+directly and reach an apparently opposite answer: under supervised fine-tuning on
+five protein tasks, Nucleotide Transformer v2 500M matches or outperforms ESM-2 on
+three of them. They attribute the two losses to tasks needing codon-level
+resolution and train a 3-mer variant to address it, which improves those two tasks
+and leaves the rest unchanged. Their protocol differs from ours in the way that
+matters: they fine-tune, we score zero-shot likelihood; they use no
+non-model baseline, no map-destroying control and no noise ceiling; and they do not
+evaluate zero-shot variant effect on deep mutational scans. Section~\ref{sec:tension}
+argues that the two results are consistent and that the difference is diagnostic,
+since a fine-tuned readout can recover residue identity from nucleotides through the
+codon channel of Section~\ref{sec:map} while a likelihood cannot.
+
+\paragraph{Evaluation critiques.} Our position follows a line of work showing that
+benchmark gains often survive removal of the mechanism they are credited to
+\citep{rendle2019difficulty,musgrave2020metric}. The specific concern that strong
+scores reflect data leakage through a known map, and not learned structure, is
+familiar from natural language inference artifacts \citep{gururangan2018annotation}.
+We contribute the observation that biology supplies an exactly known map and
+therefore exactly constructible controls, which natural language does not.
+
+\paragraph{Noise ceilings.} Attenuation corrections are standard in psychometrics
+and in neural encoding models, where repeat measurements bound explainable
+variance. Our variant obtains the ceiling from model-internal invariance violation
+and not from experimental replicates, which makes it available when replicates
+are not.
+
+\section{A Validity Protocol}
+
+Let $f$ be a model scoring inputs in representation $A$, and let a claim assert
+that $f$ captures property $P$ defined on modality $B$, related to $A$ by a known
+surjective map $\pi: A \to B$. Four checks follow.
+
+\subsection{A noise ceiling from model-internal invariance}
+\label{sec:ceiling}
+
+Because $\pi$ is many-to-one, a fibre $\pi^{-1}(b)$ is a set of inputs that must
+share the label $P(b)$ exactly. Any variation of $f$ within a fibre is variance
+that cannot track the label. Writing $\sigma^2_{\text{within}}$ for the mean
+within-fibre variance of $f$ and $\sigma^2_{\text{between}}$ for the variance
+across fibres, the correlation between $f$ and any label is attenuated by at most
+\begin{equation}
+\kappa \;=\; \sqrt{\frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} +
+\sigma^2_{\text{within}}}}.
+\end{equation}
+A true correlation $\rho$ can appear no larger than $\kappa\rho$. Reporting a null
+without $\kappa$ leaves open that the measurement had no power.
+
+For genomic models the fibres are synonymous encodings. Crucially this costs
+nothing: scoring a variant requires choosing a codon, and the same masked pass
+assigns a probability to every synonymous alternative, so the within-fibre spread
+is already computed. Across our 25 assays $\kappa = 0.900$, meaning a true
+$\rho=0.5$ would still have surfaced at $0.45$.
+
+\subsection{Map-destroying controls}
+\label{sec:map}
+
+A claim that $f$'s representation is $B$-level predicts that destroying $\pi$
+destroys the signal. The control must destroy $\pi$ while keeping the input inside
+$f$'s training distribution, or a drop is confounded with distribution shift.
+
+For DNA two manipulations do this. A frameshift by one nucleotide changes every
+downstream codon while leaving the string a real genomic sequence read one base
+later. The reverse complement is real sequence on the opposite strand. Both destroy
+the protein reading; neither makes the input unnatural.
+
+We stress one negative design lesson. Replacing \emph{all} codons with synonymous
+alternatives also preserves the protein, and its signal does drop, but this is a
+global distribution shift as much as a map manipulation and is not admissible
+evidence. The decisive controls are those that keep the input natural.
+
+\subsection{Composition-matched context twins}
+\label{sec:context}
+
+Claims that additional context improves a score require a twin that supplies the
+same number of tokens with the same composition and no information. Mononucleotide
+and dinucleotide shuffles, applied separately to each flank so that each side's
+composition is preserved, give this twin. The reported quantity is the real-minus-
+shuffled difference, never the real trend alone.
+
+\subsection{Trivial baselines and correlated units}
+\label{sec:trivial}
+
+Every table carries a scorer that uses no learned model. For protein fitness that
+is BLOSUM62; for genomic benchmark tasks a positional one-hot or a $k$-mer count;
+for representational alignment a one-hot residue encoding. Units are counted at the
+level of independence: 194 ProteinGym assays constitute 165 protein clusters, and
+our 25 assays constitute 21. Statistics are computed over clusters.
+
+\section{Experimental Setup}
+
+\paragraph{Assays.} Every ProteinGym assay for which a native coding sequence could
+be verified, where verification requires that some ENA coding sequence for the
+assay's UniProt accession translate to a protein containing the assayed target
+exactly. After removing targets longer than 420 aa or with fewer than 200 usable
+single mutants, 25 assays across 9 organisms remain: human, yeast,
+\textit{E.\ coli}, \textit{B.\ subtilis}, \textit{P.\ aeruginosa},
+\textit{K.\ pneumoniae}, \textit{S.\ acidocaldarius}, SARS-CoV-2 and HIV-1.
+
+\paragraph{Scoring.} Identical masked-marginal protocol on both modalities, on the
+same region: the assayed target sequence for protein models, and the coding
+sequence encoding exactly it for genomic models. Only the modality differs. Evo~2
+is autoregressive and is scored by summed token log-likelihood.
+
+\paragraph{Models.} ESM-2 650M; Nucleotide Transformer v2 at 50M, 100M, 250M and
+500M; HyenaDNA; Evo~2 7B. Genomic model code requires
+\texttt{transformers==4.44.2}, since version 5 removes attributes the Nucleotide
+Transformer's bundled remote code reads.
+
+\section{Results}
+
+\subsection{What the controls remove}
+
+\paragraph{The transfer claim does not survive its map control.} A linear probe on
+mean-pooled genomic embeddings, trained and evaluated within background groups so
+that it must generalise to unseen residues, reaches $\rho = +0.141$. Read alone this
+is weak transfer. Table~\ref{tab:map} is the same probe under manipulation.
+
+\begin{table}[t]
+\caption{A probe on genomic embeddings is invariant to destroying the reading
+frame. 3{,}814 background groups, within-background $\rho$.}
+\label{tab:map}
+\centering\small
+\begin{tabular}{llc}
+\toprule
+condition & protein & $\rho$ \\
+\midrule
+canonical & reference & $+0.141$ \\
+random mutant codon & identical & $+0.143$ \\
+frameshift $+1$ & \textbf{destroyed} & $+0.143$ \\
+reverse complement & \textbf{destroyed} & $+0.129$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Frameshifting changes every downstream codon and costs nothing. Reading the
+opposite strand, where the sequence is not a coding sequence at all, costs $0.012$.
+No protein-level representation can be invariant to either. The mechanism is that
+the codon at the varying site already determines the residue, so the probe never
+needed a protein-level representation.
+
+A variance decomposition agrees. The fraction of score variance explained by
+amino-acid identity is $0.643$ for the genomic likelihood and $0.672$ for the
+genomic representation, against $1.000$ for any protein model by construction. The
+representation is barely more protein-level than the likelihood.
+
+\paragraph{A genomic model aligns with ESM-2 worse than a lookup table does.}
+Linear CKA and a cross-modal ridge map with whole amino acids held out:
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+pair & CKA & held-out $R^2$ \\
+\midrule
+NT $\rightarrow$ ESM-2 & $0.663$ & $+0.412$ \\
+\textbf{one-hot} $\rightarrow$ ESM-2 & $\mathbf{0.819}$ & $\mathbf{+0.553}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A 60-parameter one-hot vector shares more with ESM-2 than the genomic model does.
+
+\paragraph{Context trends reproduce from no information.} For the Nucleotide
+Transformer, real genomic flanks produce a monotone degradation with trend
+$-0.771$; mononucleotide-shuffled flanks reproduce it at $-0.633$ over three seeds.
+HyenaDNA with a 30~kb window produces a clean positive trend of $+0.536$ whose
+shuffled twins score $+0.893$, $+0.750$ and $+0.750$, so real minus shuffled is
+$-0.008$ and real is higher in 1 of 6 comparisons. Both signs are reproduced by
+flanks that carry nothing.
+
+For Evo~2 the control is different and sharper. No arm of its context curve carries
+specificity signal at all: the bare coding sequence scores AUC $0.401$ with
+interval $[0.345,0.456]$, significantly \emph{below} chance, and every flanked arm
+lies between $0.521$ and $0.543$ with an interval containing $0.5$. The reported
+$+0.70$ trend over five points carries an exact permutation $p$ of $0.117$, falls
+to $+0.400$ with $p=0.375$ once the no-context point is dropped, and the 300~nt and
+5400~nt score vectors correlate at $+0.963$. An eighteen-fold increase in context
+past the first increment changes AUC by $+0.016$ and then nothing.
+
+\subsection{Transfer across 25 assays}
+
+\begin{table}[t]
+\caption{Mean Spearman $\rho$ across 25 DMS assays, identical protocol and region.
+Intervals are 95\% over assays.}
+\label{tab:main}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+scorer & mean $\rho$ & 95\% CI \\
+\midrule
+ESM-2 650M (protein) & $+0.4655$ & $[+0.395,+0.536]$ \\
+chemistry ridge, LOCO & $+0.2860$ & $[+0.248,+0.324]$ \\
+\textbf{Evo~2 7B (genomic)} & $\mathbf{+0.2658}$ & $[+0.202,+0.330]$ \\
+BLOSUM62 alone & $+0.2282$ & $[+0.195,+0.261]$ \\
+NT-v2 50M (genomic) & $-0.0132$ & $[-0.033,+0.007]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:main} is the headline. Three readings follow, and the trivial
+baseline decides all three.
+
+A substitution matrix with no model of any kind reaches 49\% of ESM-2 and is
+positive on 24 of 25 assays. Five fitted chemistry scalars with weights learned on
+other protein clusters reach 61\%. ESM-2's genuinely learned margin over fitted
+chemistry is $+0.179$, not $+0.465$. The bar a genomic model must clear is
+therefore $+0.228$, not $+0.466$.
+
+The Nucleotide Transformer does not clear it, losing to BLOSUM62 by $+0.241$
+$[+0.200,+0.283]$ in 24 of 25 assays. Its attenuation ceiling is $0.900$, so this
+is a null and not a power failure. Marginalising over synonymous codons, which
+removes the leak of Section~\ref{sec:map} by construction and is the only genomic
+score entitled to be called a protein-level proxy, scores $-0.019$.
+
+Evo~2 does clear zero, at $+0.266$ with an interval excluding it and positive on 23
+of 25 assays. It does not clear the substitution matrix: Evo~2 minus BLOSUM62 is
+$+0.0376$ with interval $[-0.012,+0.087]$, higher in 14 of 25. Against the fitted
+chemistry ridge it is behind, at $-0.0202$.
+
+\subsection{Scale is not the explanation}
+\label{sec:scale}
+
+The Nucleotide Transformer is flat across four sizes. Fitting $\rho$ against
+$\log_{10} N$ on the four points gives a slope of $+0.0179$ per decade and an
+intercept of $-0.1516$, with Spearman $+0.800$ over four points. Extrapolated, that
+trend predicts $+0.0241$ at 7B parameters against Evo~2's measured $+0.2658$, short
+by a factor of $11.0$. Reaching BLOSUM62 on that trend would require
+$10^{21.3}$ parameters.
+
+Evo~2 therefore sits far off the line that scaling its family would trace. Whatever
+produces its protein-fitness signal is a property of architecture and corpus, and
+scale alone does not buy it. We note the limitation squarely: with one point off
+the line we can reject the scaling account but cannot identify which of
+architecture, corpus or token budget is responsible, because none of these is a
+variable we control. Section~\ref{sec:future} says what would.
+
+\subsection{Architecture and corpus, measured from released checkpoints}
+\label{sec:stage0}
+
+Section~\ref{sec:scale} rejects the scaling account but cannot say which of
+architecture, corpus or token budget produces Evo~2's signal, because those are
+confounded between the two families. Released checkpoints resolve two of the three
+at matched architecture and inference cost only. We ran both.
+
+\paragraph{Codon-aligned tokenization does not help.} The v2 family ships a 3-mer
+variant that is otherwise identical to the 6-mer 50M model: 512 hidden, 12 layers,
+16 heads, the same 850-genome corpus, vocabulary 4107 against 75. Because a 3-mer
+token is exactly a codon, the masked token \emph{is} the codon under test and the
+neighbouring-codon conditioning the 6-mer scorer carries disappears.
+\citet{boshar2024glm} trained this model because codon-level resolution was where
+genomic models lost to protein models under fine-tuning, and reported that it
+improved their two codon-sensitive tasks. It had not been scored zero-shot.
+
+\paragraph{Within-species corpus diversity does not help.} The v1 family supplies
+\texttt{500m-human-ref} and \texttt{500m-1000g}, identical at 1280 hidden, 24 layers
+and 20 heads, differing only in training on one human reference genome against 3,202
+genetically diverse human genomes.
+
+\begin{table}[t]
+\caption{Contrasts available from released checkpoints, each varying one factor at
+matched architecture. Paired bootstrap over 25 assays. Every difference contains
+zero, and every model misses the BLOSUM62 bar by about $0.23$.}
+\label{tab:free}
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+model & mean $\rho$ & 95\% CI & $\kappa$ & vs.\ B62 \\
+\midrule
+\multicolumn{5}{l}{\emph{tokenization, 850-genome corpus, 50M}}\\
+\quad 6-mer & $-0.0132$ & $[-0.033,+0.006]$ & $0.900$ & $-0.241$ \\
+\quad 3-mer & $-0.0288$ & $[-0.053,-0.003]$ & $0.866$ & $-0.257$ \\
+\multicolumn{5}{l}{\quad paired: $+0.0156\ [-0.012,+0.043]$, contains zero}\\
+\addlinespace
+\multicolumn{5}{l}{\emph{corpus diversity, 500M}}\\
+\quad human-ref & $+0.0032$ & $[-0.015,+0.021]$ & $0.901$ & $-0.225$ \\
+\quad 1000G & $-0.0022$ & $[-0.024,+0.017]$ & $0.878$ & $-0.230$ \\
+\multicolumn{5}{l}{\quad paired: $+0.0054\ [-0.013,+0.025]$, contains zero}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:free} reports both. Neither factor moves the result. Codon-aligned
+tokenization gives a paired difference of $+0.0156$ $[-0.012,+0.043]$, and three
+thousand genomes of within-species variation give $+0.0054$ $[-0.013,+0.025]$. Both
+contain zero. All four models sit about $0.23$ below the substitution-matrix bar,
+and every attenuation ceiling lies between $0.866$ and $0.901$, so none of these
+nulls is a power failure.
+
+We note one sampling lesson from the run itself. At 14 of the 25 assays the
+tokenizer difference read $-0.0302$ with an interval excluding zero, and that did
+not survive the remaining eleven. These intervals are wide at small $n$ and a
+partial sweep is not a result.
+
+\paragraph{What remains unmeasured.} Cross-species corpus breadth, available as
+NT~2.5B trained on 1000G against the same size trained on 850 species, is the one
+free contrast we could not run, for storage and not compute reasons. It is also the
+most informative of the three, since Evo~2 trains across all domains of life and
+breadth is the most plausible remaining account of its margin. We report its absence
+explicitly because the conclusion we draw in Section~\ref{sec:future} would change
+if it showed a gradient.
+
+\subsection{Genomic models on their own task}
+
+Grading genomic models on coding sequence and protein fitness is grading them on a
+task they were not built for. On five Nucleotide Transformer benchmark tasks under
+a homology-clustered split, with frozen embeddings and a linear probe, the trivial
+competitor wins outright twice and loses twice by under $0.03$ AUC. A positional
+one-hot reaches $0.959$ on splice sites against the Nucleotide Transformer's
+$0.756$ and HyenaDNA's $0.704$, a loss of $0.203$ and $0.254$. The one-hot
+competitor is selected on test, so the baseline is given an oracle the model is
+not, and still wins.
+
+\section{Reconciling Fine-Tuned and Zero-Shot Results}
+\label{sec:tension}
+
+\citet{boshar2024glm} report Nucleotide Transformer v2 500M matching or beating
+ESM-2 on three of five protein tasks. We report the same family at $\rho=-0.013$
+against ESM-2's $+0.466$. Both can hold, and the protocol says why.
+
+Fine-tuning fits a readout on top of the representation. Section~\ref{sec:map}
+shows that the genomic representation carries residue identity through the codon,
+and that this survives frameshifting and reverse-complementing. A supervised head
+is free to use that channel, so strong fine-tuned performance on a protein task is
+evidence that residue identity is recoverable and not that the model represents
+protein-level structure. A zero-shot likelihood has no fitted head and therefore no
+access to the channel, which is why the same model scores at chance.
+
+This makes the two measurements complementary and gives a testable prediction: a
+model whose fine-tuned protein performance comes from the codon channel should show
+that performance survive a frameshift of its input. We did not run this and regard
+it as the sharpest available test of the account, since it requires only re-running
+an existing fine-tuning pipeline on frameshifted sequences.
+
+A codon-aligned tokenization is the natural place to look for a genuine effect, and
+one exists at matched architecture: \texttt{nucleotide-transformer-v2-50m-3mer-}
+\texttt{multi-species} differs from its 6-mer counterpart only in vocabulary size,
+75 against 4107, with identical depth, width, head count and training corpus. We
+report it zero-shot in Table~\ref{tab:free} as the one architectural change prior
+work identified as promising for protein tasks.
+
+\section{Four Claims the Protocol Overturned}
+\label{sec:retract}
+
+\textbf{A reading-frame result was retracted.} A genomic model appeared unable to
+distinguish a gene from the same gene read one nucleotide out of frame. The
+``frameshift'' is a rotation, so apart from one wrap junction it is real genomic
+sequence. Ranking the four conditions by whether they yield a real genomic string
+reproduces the entire table with no appeal to reading frame. The replacement probe,
+calibrated against a 3-periodic Markov positive control, is underpowered and not
+null: bounding it needs about 214 unique coding sequences and 24 are available.
+
+\textbf{A representation-level transfer claim was falsified by its own control},
+as Table~\ref{tab:map} shows.
+
+\textbf{A context dose-response was measuring composition}, in both directions.
+
+\textbf{A general claim was too general.} ``A genomic model carries no
+protein-fitness signal'' held for the Nucleotide Transformer family and was written
+as though it held for genomic models. Evo~2 refutes it.
+
+\section{What the Protocol Costs}
+
+Adoption is cheap, which is the argument for it.
+
+The noise ceiling is free: it is read off a masked pass already performed. The map
+controls cost one additional scoring pass per manipulation, so two passes over the
+evaluation set. Composition-matched twins cost one pass per shuffle seed per
+condition; we use two seeds and two shuffle orders. Trivial baselines cost
+negligible compute. Cluster-level statistics cost nothing but a join.
+
+For the Evo~2 context control specifically, scoring the 399-variant discrimination
+subset instead of all 7{,}882 variants is a twentyfold saving that changes no
+reported number, because the published AUCs are read off that subset already. The
+full control is 21 arms, 8{,}379 sequences and 41.9M tokens, against 167M for the
+original uncontrolled arms. A control that is cheaper than the experiment it checks
+has no compute excuse.
+
+\section{Limitations}
+\label{sec:future}
+
+Evo~2 numbers come from a single run on one GPU host and describe \texttt{evo2\_7b},
+since \texttt{evo2\_1b\_base} requires Transformer Engine. We have one genomic
+architecture off the Nucleotide Transformer scaling line and therefore cannot
+separate architecture from corpus from token budget.
+
+Public releases fix the \emph{token budget} at one value per model: we verified
+that neither the Nucleotide Transformer nor Evo~2 publishes intermediate-step
+checkpoints, every repository carrying a single branch and one weight file. The
+token axis is therefore closed to any study of frozen models.
+
+Corpus and tokenization are not closed, and Section~\ref{sec:stage0} measures
+both. Neither moves the result, which bears on what a pretraining ladder could be
+expected to find. Of the three factors separable without training a model, two are
+flat and the third is unmeasured here.
+
+What remains genuinely unobservable from released models is the token budget and
+any factor crossed with it. A ladder pretrained under controlled variation of
+parameters, tokens and corpus composition would close it, and Appendix~A gives a
+design and budget. We state the case against that ladder as plainly as the case
+for it: with two of three free axes null, the argument for the spend rests on the
+token axis alone, and we would not undertake it before the breadth contrast of
+Section~\ref{sec:stage0} is run, since that is three orders of magnitude cheaper
+and bears on the same question.
+
+Every assay used here has homologs, so the regime where a sequence has no relatives
+is untested. The regulatory arm covers two small models and licenses nothing about
+larger ones. The specificity arm rests on one combinatorially complete landscape.
+
+\section{Conclusion}
+
+The controls in this paper are not specific to biology. Any claim that a
+representation encodes a property of another modality related to it by a known map
+can be checked by destroying the map, by bounding attenuation from within-fibre
+variance, and by matching a context manipulation on composition. Biology is the
+setting where the map is known exactly, which makes it the setting where the
+controls are exactly constructible and where their consequences can be seen most
+clearly. In this setting they removed four claims, three of them ours, and left a
+smaller result standing: genomic-to-protein transfer exists at Evo~2 scale and does
+not clear a substitution matrix. Two factors that might have explained it, codon
+tokenization and corpus diversity, do not, and we were able to establish that from
+released checkpoints without training anything. A reviewer entitled to ask what
+would change our mind has a short answer: cross-species corpus breadth, at a cost
+of one download.
+
+\bibliographystyle{icml2027}
+\bibliography{refs}
+
+\end{document}

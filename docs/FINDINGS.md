@@ -1333,3 +1333,100 @@ already: 21 arms, 8,379 sequences, 41.9M tokens, against 167M for the original
 context arms. The runner and its analyzer live with the ParD3 landscape they need,
 which this repository does not vendor. The table is
 `results/evo2_context_analysis.csv`.
+
+## 39. Codon-aligned tokenization does not rescue zero-shot transfer
+
+Boshar et al. (2024, Bioinformatics 40(9):btae529) ask this project's question under
+supervised fine-tuning and report NT-v2 500M matching or beating ESM-2 on three of
+five protein tasks. They attribute their two losses to tasks needing codon-level
+resolution and train `nucleotide-transformer-v2-50m-3mer-multi-species` to address
+it, reporting that it improves those two tasks. That model is architecturally
+identical to the 6-mer 50M: 512 hidden, 12 layers, 16 heads, same 850-genome
+multi-species corpus, differing only in vocabulary, 4107 against 75. With a 3-mer
+tokenizer each token is exactly one codon, so the masked token **is** the codon
+under test and the neighbouring-codon conditioning that the 6-mer scorer carries
+disappears.
+
+It had never been scored zero-shot. On the same 25 assays, same protocol, both
+models in one invocation:
+
+| scorer | mean rho | 95% CI | positive | attenuation ceiling |
+|---|---|---|---|---|
+| ESM-2 650M | +0.4655 | [+0.395, +0.536] | 25/25 | - |
+| NT-v2 50M 6-mer | **-0.0132** | [-0.0332, +0.0058] | 10/25 | 0.900 |
+| NT-v2 50M 3-mer | **-0.0288** | [-0.0528, -0.0025] | 8/25 | 0.866 |
+
+**Codon-aligned tokenization does not help.** The paired difference, 6-mer minus
+3-mer, is +0.0156 [-0.0119, +0.0426] and **contains zero**, so the two tokenizations
+are not distinguishable from each other. Against the real bar both fail by about a
+quarter of a correlation unit: -0.241 [-0.261, -0.222] and -0.257 [-0.281, -0.231]
+against BLOSUM62 at +0.228. Codon-marginalised scores agree, -0.018 and -0.034.
+
+**Do not claim the 3-mer model is worse.** At 14 of 25 assays the paired difference
+read -0.0302 with an interval excluding zero, and that did not survive the remaining
+11. The honest statement is no detectable difference, and the partial-sample reading
+is recorded here as a reminder that these intervals are wide at n=14.
+
+**Both ceilings are high**, 0.900 and 0.866, so neither null is a power failure. A
+true rho of 0.5 would have surfaced at 0.45 and 0.43.
+
+**Why this matters more than one more null.** It is the architectural change the
+only prior work on this question nominated, run on the readout where the codon
+channel of section 17 is unavailable. Their gain appears under fine-tuning, where a
+supervised head can recover residue identity from nucleotides; it does not appear
+in a likelihood, which has no head. The two results are consistent and the
+difference is diagnostic, which is a sharper claim than either alone. The prediction
+this licenses, and which is cheap for anyone with their pipeline: a fine-tuned
+protein score that comes from the codon channel should survive frameshifting its
+input.
+
+Regression check: the 6-mer arm reproduces the published -0.0132 exactly, so
+generalising `NTScorer` to probe token width from the tokenizer rather than assume
+6 changed nothing. Run from `scripts/run_dms_transfer.py`, analysed by
+`scripts/analyze_stage0.py`, table in `results/stage0_tokenizer.csv`.
+
+## 40. Corpus diversity buys nothing either, and Stage 0 is two-thirds null
+
+Section 39 closed the tokenizer axis. This closes the within-species corpus axis,
+using the NT v1 family, where `500m-human-ref` and `500m-1000g` are architecturally
+identical (1280 hidden, 24 layers, 20 heads, vocab 4107) and differ only in what
+they were trained on: one human reference genome against 3,202 genetically diverse
+human genomes.
+
+| scorer | corpus | mean rho | 95% CI | positive | ceiling |
+|---|---|---|---|---|---|
+| NT 500M human-ref | 1 reference genome | +0.0032 | [-0.0149, +0.0210] | 11/25 | 0.901 |
+| NT 500M 1000G | 3,202 human genomes | -0.0022 | [-0.0236, +0.0170] | 15/25 | 0.878 |
+
+Paired difference +0.0054 [-0.0131, +0.0246], **contains zero**. Three thousand
+genomes of within-species variation buy nothing over a single reference genome.
+Against BLOSUM62 both fail by about the same margin as the 50M models, -0.225
+[-0.243, -0.207] and -0.230 [-0.252, -0.211].
+
+**Stage 0 scoreboard.** Of the three axes reachable without pretraining:
+
+| axis | contrast | paired difference | verdict |
+|---|---|---|---|
+| tokenization | 50M 6-mer vs 3-mer | +0.0156 [-0.0119, +0.0426] | flat |
+| corpus diversity | 500M human-ref vs 1000G | +0.0054 [-0.0131, +0.0246] | flat |
+| corpus breadth | 2.5B 1000G vs multi-species | **not run** | blocked |
+
+**Why breadth is not run: disk, not compute.** The 2.5B checkpoints are ~10 GB each
+and the machine was at 100% capacity with 138 MB free. The failed partial download
+was removed, leaving 2.4 GB, which is still short of one model let alone the pair.
+The HuggingFace cache holds 35 GB and nothing in it was deleted beyond my own
+incomplete blob.
+
+**What this does to the ladder.** Two of three free axes are null, which argues
+*against* the pretraining program in `paper/DESIGN.md`, not for it. If breadth is
+also flat, every reachable axis is null and the case for 8,000 A100-hours rests
+entirely on the token budget, the one axis no released checkpoint can address.
+That is a thin basis for the spend and the honest call is to stop at the
+measurement-validity paper, now carrying three controlled negative contrasts.
+
+Breadth remains the one that could flip it. Evo 2 trains across all domains of life,
+so if cross-species range is what separates it from this family, the 2.5B contrast
+is where it first becomes visible. It is worth 10 GB of disk to find out.
+
+Tables in `results/stage0_tokenizer.csv` and `results/stage0_corpus500m.csv`,
+analysed by `scripts/analyze_stage0.py`.

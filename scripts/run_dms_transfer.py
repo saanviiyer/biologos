@@ -72,7 +72,7 @@ def esm_scores(model, tok, dev, seq, positions):
 
 @torch.no_grad()
 def nt_token_logprobs(sc, cds, positions, cds_offset=0):
-    """For each mutated aa position, the masked log-prob over all 4096 6-mers."""
+    """For each mutated aa position, the masked log-prob over the token vocabulary."""
     ids0 = sc.tok(cds, return_tensors="pt")["input_ids"]
     n_tok = ids0.shape[1] - 1
     need = {}
@@ -165,7 +165,7 @@ def main():
                     continue
                 e_s.append(float(elp[p][etok.convert_tokens_to_ids(mu)]
                                  - elp[p][etok.convert_tokens_to_ids(wt)]))
-                base = list(seq_for_nt[t * 6:(t + 1) * 6])
+                base = list(seq_for_nt[t * sc.k:(t + 1) * sc.k])
                 wt_lp = nlp[t][vocab.get("".join(base), sc.tok.unk_token_id)]
                 syn = []
                 for codon in glm.SYNONYMOUS[mu]:
@@ -190,7 +190,8 @@ def main():
                              rho_nt=r_n, rho_nt_codon_marginalised=r_m,
                              syn_within_sd=w, nt_between_sd=b,
                              attenuation_ceiling=ceil))
-            tag = nt_name.split("-v2-")[-1].replace("-multi-species", "")
+            tag = nt_name.split("/")[-1].replace("nucleotide-transformer-", "")\
+                         .replace("-multi-species", "").replace("v2-", "")
             print(f"{dms[:30]:30s} {tag:9s} {len(y_a):5d} {r_e:+7.3f} {r_n:+7.3f} "
                   f"{r_m:+7.3f} {w:7.2f} {ceil:6.3f}", flush=True)
 
@@ -203,7 +204,8 @@ def main():
             e = np.array([r["rho_esm"] for r in g]); n = np.array([r["rho_nt"] for r in g])
             m = np.array([r["rho_nt_codon_marginalised"] for r in g])
             ci = 1.96 * n.std(ddof=1) / np.sqrt(len(n))
-            tag = nt_name.split("-v2-")[-1].replace("-multi-species", "")
+            tag = nt_name.split("/")[-1].replace("nucleotide-transformer-", "")\
+                         .replace("-multi-species", "").replace("v2-", "")
             print(f"{'MEAN ' + tag:30s} {'':9s} {len(g):5d} {e.mean():+7.3f} "
                   f"{n.mean():+7.3f} {m.mean():+7.3f}   CI [{n.mean()-ci:+.3f}, "
                   f"{n.mean()+ci:+.3f}]  ceil {np.nanmean([r['attenuation_ceiling'] for r in g]):.3f}"

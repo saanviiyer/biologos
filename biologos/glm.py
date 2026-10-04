@@ -207,7 +207,14 @@ def _nt_config(model_name: str):
 
 
 class NTScorer:
-    """Nucleotide Transformer: masked scoring over non-overlapping 6-mer tokens.
+    """Nucleotide Transformer: masked scoring over non-overlapping k-mer tokens.
+
+    Token width is probed from the tokenizer, since the v2 family ships both a
+    6-mer tokenizer and an architecture-matched 3-mer variant whose tokens are
+    exactly codons. With k=3 the slot inside a token is always 0 and the masked
+    token IS the codon under test, which removes the neighbouring-codon
+    conditioning described below.
+
 
     The ParD3 CDS is 282 nt = 47 tokens with no offset, so each token is exactly
     two codons and the three mutated codons fall in three distinct tokens. That
@@ -233,7 +240,24 @@ class NTScorer:
         self.model = AutoModelForMaskedLM.from_pretrained(
             model_name, config=_nt_config(model_name),
             trust_remote_code=True).to(self.device).eval()
-        self.k = 6
+        self.k = self._probe_k()
+
+    def _probe_k(self) -> int:
+        """Token width in nucleotides, measured instead of assumed.
+
+        The v2 family ships a 6-mer tokenizer and a 3-mer variant that is
+        otherwise architecture-identical, so the width cannot be hard-coded. A
+        probe of known length fixes it: 36 nt is divisible by both 3 and 6, and
+        the count of non-special tokens gives the width directly.
+        """
+        probe = "ATGGCAAACGTGGAAAAAATGAGCGTGGCCTAACGT"      # 36 nt
+        ids = self.tok(probe)["input_ids"]
+        n_special = sum(1 for t in self.tok.convert_ids_to_tokens(ids)
+                        if t in self.tok.all_special_tokens)
+        k = len(probe) // (len(ids) - n_special)
+        if k not in (3, 6):
+            raise ValueError(f"unexpected token width {k} for {self.name}")
+        return k
 
     def token_index(self, cds_offset: int, aa_pos: int) -> tuple[int, int]:
         """(token position in the input, codon's slot inside that token)."""
