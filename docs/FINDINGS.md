@@ -1430,3 +1430,63 @@ is where it first becomes visible. It is worth 10 GB of disk to find out.
 
 Tables in `results/stage0_tokenizer.csv` and `results/stage0_corpus500m.csv`,
 analysed by `scripts/analyze_stage0.py`.
+
+## 41. Every contrast at both unit levels, with the multiplicity family declared
+
+Three defects, all ours, motivated this pass. Cluster-level statistics had been
+reported for exactly one contrast while the Stage 0 results stayed assay-level.
+The headline table used m ± 1.96·SE, a method already listed among the corrected
+defects in this log, so the same quantity appeared with two interval methods in
+two files. And no multiplicity family had ever been declared.
+
+`scripts/run_interval_audit.py` fixes the family at eight paired contrasts,
+recomputes each at the assay and the protein-cluster level with t intervals, and
+reports two-sided sign-flip permutation p-values. Permutation rather than a
+t-test because at 21 clusters a normality assumption is doing real work, while
+exchangeability of sign under the null is nearly free.
+
+| contrast | assay p | cluster p | survives 0.05/8 |
+|---|---|---|---|
+| Evo 2 vs ESM-2 | <0.0001 | <0.0001 | yes |
+| ESM-2 vs BLOSUM62 | <0.0001 | <0.0001 | yes |
+| BLOSUM62 vs NT-v2 50M | <0.0001 | <0.0001 | yes |
+| Evo 2 vs BLOSUM62 | 0.148 | 0.194 | no |
+| Evo 2 vs chemistry ridge | 0.475 | 0.592 | no |
+| codon-marginalised vs raw NT | 0.160 | 0.151 | no |
+| tokenizer, 3-mer vs 6-mer | 0.290 | 0.346 | no |
+| corpus, 1000G vs human-ref | 0.592 | 0.927 | no |
+
+**Multiplicity changes no conclusion here, and the reason is worth stating.** The
+three contrasts that survive correction are the ones nobody disputes: a protein
+model beats a genomic one, a protein model beats a substitution matrix, and a
+substitution matrix beats a genomic model. The five that fail are all claims of
+*no difference*, and not one of them was close to 0.05 even uncorrected. The
+smallest of the five is Evo 2 against BLOSUM62 at 0.148. Correction cannot
+manufacture a null, and these nulls did not need it.
+
+**Clustering moves the numbers and changes no verdict.** Going from 25 assays to
+21 clusters widens every interval and shifts the corpus contrast from −0.0054 to
+−0.0010, which is flatter still. The tokenizer contrast goes from −0.0156 to
+−0.0145. Both continue to contain zero.
+
+**t intervals are wider than the 1.96·SE ones that were published.** Evo 2's
+marginal moves from [+0.202, +0.330] to [+0.199, +0.333], BLOSUM62's from
+[+0.195, +0.261] to [+0.193, +0.263]. The direction is always the same and the
+differences are small, but publishing one quantity under two interval methods was
+the defect, not the width.
+
+**What this does not fix.** The clusters are name prefixes, not sequence-identity
+clusters, so two assays on homologous proteins with different id prefixes still
+count twice. That is the case the independence rule was written for and it
+remains unmeasured; an `mmseqs` run would settle it. The permutation test assumes
+only sign exchangeability, but it inherits the same unit problem: permuting 21
+units that are not fully independent is still permuting 21 units.
+
+**A panel note that caused a wrong number once already.** `results/evo2_dms.csv`
+covers 32 assays while the other scorers cover 25. Computing Evo 2's marginal over
+its own 32 gives +0.2708, which then does not match the +0.2658 inside its own
+paired contrast. The script restricts every marginal to the 25 assays all scorers
+share. Mixing panels is how a marginal stops agreeing with the contrast it
+belongs to.
+
+Table in `results/interval_audit.csv`.
