@@ -55,9 +55,24 @@ def main():
     nt = [(p, r) for n, p, r, _ in pts if n.startswith("NT")]
     x = np.log10([p for p, _ in nt]); y = np.array([r for _, r in nt])
     slope, icept = np.polyfit(x, y, 1)
+    resid = y - (slope * x + icept)
+    se = np.sqrt((resid**2).sum() / (len(x) - 2) / ((x - x.mean())**2).sum())
+    # Exact permutation over all orderings of y against the fixed sizes. With
+    # four points there are 24, so the smallest attainable two-sided p is 2/24.
+    # This replaces a t-test whose normality assumption four points cannot carry,
+    # and needs no distribution function the repository does not have.
+    perms = [np.array(q) for q in __import__("itertools").permutations(y)]
+    slopes = np.array([np.polyfit(x, q, 1)[0] for q in perms])
+    p_perm = float((np.abs(slopes) >= abs(slope) - 1e-12).mean())
     print(f"\n--- NT-v2 trend, fitted on {len(nt)} points ---")
     print(f"  rho = {slope:+.4f} per decade of parameters {icept:+.4f}")
+    print(f"  standard error of the slope = {se:.4f}")
     print(f"  Spearman(params, rho) = {spearman([p for p, _ in nt], y):+.3f}")
+    print(f"  exact permutation p for the slope = {p_perm:.3f} "
+          f"({len(perms)} orderings; the floor is {2/len(perms):.3f})")
+    print("  the four per-size means are each within noise of zero, so the family")
+    print("  is flat in LEVEL and monotone only in ORDER; the fit below grants the")
+    print("  scaling account its best case rather than reporting an established trend.")
 
     print("\n--- what that trend extrapolates to ---")
     for name, target in [("BLOSUM62 (+0.228)", BLOSUM62), ("ESM-2 650M (+0.466)", ESM2)]:

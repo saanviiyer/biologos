@@ -39,10 +39,12 @@ weak transfer, scores $+0.143$ after its reading frame is destroyed and $+0.129$
 the reverse complement. A context dose-response is reproduced in both directions by
 flanks carrying no genomic information. Across 25 deep mutational scanning assays
 in 9 organisms, the surviving picture is that genomic-to-protein transfer is a
-property of architecture and corpus and not of scale: the Nucleotide Transformer
-family is flat at $-0.013$ over four sizes, Evo~2 7B reaches $+0.266$ but is
-statistically indistinguishable from BLOSUM62 at $+0.228$, and the Nucleotide
-Transformer scaling trend under-predicts Evo~2 by a factor of 9.5. Released checkpoints let us separate two
+property of architecture and corpus and not of scale: no Nucleotide Transformer size
+carries protein-fitness signal, the four means running from $-0.013$ to $+0.008$
+with every interval containing zero; Evo~2 7B reaches $+0.266$ but is
+statistically indistinguishable from BLOSUM62 at $+0.228$; and granting that
+family the monotone trend its four points trace, which is not itself significant,
+extrapolation to 7B still falls short of Evo~2 by a factor of 9.5. Released checkpoints let us separate two
 candidate explanations at matched architecture: codon-aligned tokenization and a
 thousandfold increase in training-corpus diversity each leave the result unchanged,
 with paired differences of $+0.016$ and $+0.005$ that both contain zero. We report
@@ -340,12 +342,23 @@ chemistry ridge it is behind, at $-0.0202$.
 \subsection{Scale is not the explanation}
 \label{sec:scale}
 
-The Nucleotide Transformer is flat across four sizes. Fitting $\rho$ against
-$\log_{10} N$ on the four points gives a slope of $+0.0207$ per decade and an
-intercept of $-0.1762$, with Spearman $+1.000$ over four points. Extrapolated, that
-trend predicts $+0.0281$ at 7B parameters against Evo~2's measured $+0.2658$, short
-by a factor of $9.5$. Reaching BLOSUM62 on that trend would require
-$10^{19.5}$ parameters.
+The Nucleotide Transformer is flat in level across four sizes but not in order,
+and the distinction decides what the extrapolation below is worth. The four means
+run from $-0.0132$ at 50M to $+0.0083$ at 500M and every one of their intervals
+contains zero, so no size in the family carries protein-fitness signal. They are
+nonetheless monotone in parameter count, Spearman $+1.000$.
+
+We fit a trend to grant the scaling account its best case, not because these data
+establish one. Regressing $\rho$ on $\log_{10} N$ gives a slope of $+0.0207$ per
+decade and an intercept of $-0.1762$; on four points that slope carries a standard
+error of $0.0069$ and is not significant, at $p=0.083$ by exact permutation over
+all $24$ orderings of the four means, where the attainable floor is $2/24=0.083$. Extrapolated, the trend
+predicts $+0.0281$ at 7B parameters against Evo~2's measured $+0.2658$, short by a
+factor of $9.5$, and reaching BLOSUM62 along it would require $10^{19.5}$
+parameters. That second figure is what happens when a trend fitted inside the noise
+is extended eleven orders of magnitude, and is quoted to show the absurdity rather
+than as an estimate. The first is better read as a lower bound on the gap: even on
+the most generous reading of this family's trajectory, scale does not reach Evo~2.
 
 Evo~2 therefore sits far off the line that scaling its family would trace. Whatever
 produces its protein-fitness signal is a property of architecture and corpus, and

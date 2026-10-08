@@ -907,7 +907,13 @@ Five points are now available on the identical 25 assays, a 140x parameter span
 | *ESM-2 650M reference* | | *+0.4655* |
 
 Within the Nucleotide Transformer family the trend is **+0.0207 per decade of
-parameters**, Spearman(params, rho) = +1.00 across four points.
+parameters**, Spearman(params, rho) = +1.00 across four points. Every one of the
+four per-size intervals contains zero, so the family is flat in LEVEL and monotone
+only in ORDER, and the fit grants the scaling account its best case rather than
+reporting a trend these data establish. The slope carries a standard error of
+0.0069 and an exact permutation p of 0.083 over all 24 orderings of the four
+means -- which is the floor of that test, so four points cannot produce a smaller
+number however clean the ordering looks.
 
 **The trend does not explain Evo 2.** Extrapolated to 7B it predicts **+0.028**
 against the **+0.266** actually measured, under-predicting by a factor of 9.5.
