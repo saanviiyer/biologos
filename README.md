@@ -33,8 +33,8 @@ So a genomic language model at Evo 2 scale does acquire protein-fitness signal.
 It is statistically indistinguishable from a substitution matrix, it is beaten by
 five hand-chosen chemical properties, and it sits far below a protein model. The
 Nucleotide Transformer family carries no signal at all at any scale tested, and its
-scaling trend does not reach Evo 2: extrapolated to 7B it predicts +0.024 against
-the +0.266 measured, short by a factor of eleven.
+scaling trend does not reach Evo 2: extrapolated to 7B it predicts +0.028 against
+the +0.266 measured, short by a factor of 9.5.
 
 ## Four things this repository got wrong first
 
@@ -79,7 +79,7 @@ held for genomic models. Evo 2 refutes it. See section 30.
 | question | answer | section |
 |---|---|---|
 | Does genomic-LM likelihood predict protein fitness? | No for NT at four scales; yes but sub-baseline for Evo 2 | 18, 20, 30 |
-| Is that a scaling phenomenon? | No. The NT trend under-predicts Evo 2 by 11x | 31 |
+| Is that a scaling phenomenon? | No. The NT trend under-predicts Evo 2 by 9.5x | 31 |
 | Does the genomic representation carry protein-level information? | No. The signal survives frameshift and reverse complement | 17 |
 | Does more genomic context help? | No. No Evo 2 context arm beats chance, and both NT signs reproduce from shuffled flanks | 19, 35, 38 |
 | Does a genomic model memorise its training genomes? | No membership signal at 50M; confounded and open at 500M | 32, 36 |

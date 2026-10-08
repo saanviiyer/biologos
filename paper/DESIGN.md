@@ -3,8 +3,8 @@
 ## Why frozen checkpoints cannot answer the question
 
 The paper rejects the scaling account of genomic-to-protein transfer: the
-Nucleotide Transformer trend predicts +0.024 at 7B against Evo 2's measured
-+0.266, short by 11x. Rejecting that account is all the evidence supports, because
+Nucleotide Transformer trend predicts +0.028 at 7B against Evo 2's measured
++0.266, short by 9.5x. Rejecting that account is all the evidence supports, because
 Evo 2 differs from the Nucleotide Transformer in architecture, corpus, tokenizer,
 objective and token budget at once, and no frozen checkpoint lets any of those be
 varied.
@@ -32,7 +32,7 @@ before any GPU is requested:
 | training stage | `evo2_7b_base` vs `evo2_7b` | midtraining and context extension |
 
 Running these costs inference only. They cannot settle the token axis, but they
-bound how much of the 11x Evo 2 gap corpus and tokenization can account for, and a
+bound how much of the 9.5x Evo 2 gap corpus and tokenization can account for, and a
 corpus gradient here is the signal that justifies Stage 2. The 3-mer model is the
 highest-value single run: Boshar et al. (2024) trained it specifically because
 codon-level resolution was where genomic models lost to protein models, and it has
@@ -52,7 +52,7 @@ Three outcomes, all publishable:
    a crossover point, and the paper becomes the ATLAS-shaped result.
 3. **Transfer stays at the BLOSUM62 bar everywhere reachable.** Then the strongest
    version of the negative result is established causally, not by extrapolation,
-   and the 11x gap is attributed to something outside the reachable box.
+   and the 9.5x gap is attributed to something outside the reachable box.
 
 Outcome 3 is the modal one on current evidence and must be acceptable before
 starting, or the project is a bet on a positive.

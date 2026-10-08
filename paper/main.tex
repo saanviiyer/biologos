@@ -42,7 +42,7 @@ in 9 organisms, the surviving picture is that genomic-to-protein transfer is a
 property of architecture and corpus and not of scale: the Nucleotide Transformer
 family is flat at $-0.013$ over four sizes, Evo~2 7B reaches $+0.266$ but is
 statistically indistinguishable from BLOSUM62 at $+0.228$, and the Nucleotide
-Transformer scaling trend under-predicts Evo~2 by a factor of eleven. Released checkpoints let us separate two
+Transformer scaling trend under-predicts Evo~2 by a factor of 9.5. Released checkpoints let us separate two
 candidate explanations at matched architecture: codon-aligned tokenization and a
 thousandfold increase in training-corpus diversity each leave the result unchanged,
 with paired differences of $+0.016$ and $+0.005$ that both contain zero. We report
@@ -341,11 +341,11 @@ chemistry ridge it is behind, at $-0.0202$.
 \label{sec:scale}
 
 The Nucleotide Transformer is flat across four sizes. Fitting $\rho$ against
-$\log_{10} N$ on the four points gives a slope of $+0.0179$ per decade and an
-intercept of $-0.1516$, with Spearman $+0.800$ over four points. Extrapolated, that
-trend predicts $+0.0241$ at 7B parameters against Evo~2's measured $+0.2658$, short
-by a factor of $11.0$. Reaching BLOSUM62 on that trend would require
-$10^{21.3}$ parameters.
+$\log_{10} N$ on the four points gives a slope of $+0.0207$ per decade and an
+intercept of $-0.1762$, with Spearman $+1.000$ over four points. Extrapolated, that
+trend predicts $+0.0281$ at 7B parameters against Evo~2's measured $+0.2658$, short
+by a factor of $9.5$. Reaching BLOSUM62 on that trend would require
+$10^{19.5}$ parameters.
 
 Evo~2 therefore sits far off the line that scaling its family would trace. Whatever
 produces its protein-fitness signal is a property of architecture and corpus, and

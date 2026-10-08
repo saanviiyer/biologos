@@ -40,7 +40,7 @@ def main():
 
     pts = []
     for tag, p in PARAMS.items():
-        rows = [r for r in sweep if tag in r["nt_model"] and r["dms_id"] in common]
+        rows = [r for r in sweep if f"-v2-{tag}-" in r["nt_model"] and r["dms_id"] in common]
         if rows:
             v = np.array([float(r["rho_nt"]) for r in rows])
             pts.append((f"NT-v2 {tag}", p, v.mean(), len(v)))

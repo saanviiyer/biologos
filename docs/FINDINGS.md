@@ -898,7 +898,7 @@ Five points are now available on the identical 25 assays, a 140x parameter span
 
 | model | parameters | mean rho |
 |---|---|---|
-| NT-v2 50M | 5.0e7 | -0.0099 |
+| NT-v2 50M | 5.0e7 | -0.0132 |
 | NT-v2 100M | 1.0e8 | -0.0129 |
 | NT-v2 250M | 2.5e8 | -0.0065 |
 | NT-v2 500M | 5.0e8 | +0.0083 |
@@ -906,15 +906,15 @@ Five points are now available on the identical 25 assays, a 140x parameter span
 | *BLOSUM62 reference* | | *+0.2282* |
 | *ESM-2 650M reference* | | *+0.4655* |
 
-Within the Nucleotide Transformer family the trend is **+0.0179 per decade of
-parameters**, Spearman(params, rho) = +0.80 across four points.
+Within the Nucleotide Transformer family the trend is **+0.0207 per decade of
+parameters**, Spearman(params, rho) = +1.00 across four points.
 
-**The trend does not explain Evo 2.** Extrapolated to 7B it predicts **+0.024**
-against the **+0.266** actually measured, under-predicting by a factor of 11.
+**The trend does not explain Evo 2.** Extrapolated to 7B it predicts **+0.028**
+against the **+0.266** actually measured, under-predicting by a factor of 9.5.
 
 **And the extrapolation is absurd, which is the point.** Reaching BLOSUM62 at
-+0.228 along the NT line would take about **1.9e21 parameters**. That number is not
-an estimate of anything; it is what happens when a flat trend is extended thirteen
++0.228 along the NT line would take about **3.1e19 parameters**. That number is not
+an estimate of anything; it is what happens when a flat trend is extended eleven
 orders of magnitude, and it should be quoted only to make that point. The NT values
 span -0.013 to +0.008, all within noise of zero, so the honest statement is that
 the NT trend is flat and any crossover it implies is meaningless.
@@ -988,7 +988,7 @@ cross-modality transfer. It is what one should expect from a model that is barel
 distinguishable from a Markov chain at modelling DNA in the first place. The
 interesting question was never why NT-v2 fails on proteins; it is why anyone
 expected a model with this much margin over a 5-mer lookup to succeed at anything.
-Section 31's finding that Evo 2 sits 11x above the NT scaling line reads the same
+Section 31's finding that Evo 2 sits 9.5x above the NT scaling line reads the same
 way from this side.
 
 ### A confound the audit raised is now closed
