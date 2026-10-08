@@ -430,6 +430,18 @@ $0.756$ and HyenaDNA's $0.704$, a loss of $0.203$ and $0.254$. The one-hot
 competitor is selected on test, so the baseline is given an oracle the model is
 not, and still wins.
 
+Concurrent work reaches this result independently and in a stronger form.
+\citet{cheng2026invariance} evaluate five genomic models, including Evo2-1B, on a
+650-sequence benchmark with scrambled controls, and report universal
+strand-blindness and a 100-parameter position-aware PWM at perfect performance
+where billion-parameter models fail; they further find that larger models show
+\emph{stronger} compositional bias, so scale amplifies the failure rather than
+correcting it. Their benchmark is purpose-built and better powered than our
+five-task probe. We therefore present this subsection as a corroborated side
+result rather than a contribution, and note that it is the arm of this work that
+claims least: the protocol and the zero-shot transfer measurement are where our
+contribution sits.
+
 \section{Reconciling Fine-Tuned and Zero-Shot Results}
 \label{sec:tension}
 
