@@ -131,8 +131,8 @@ models substitutes.
 
 | axis | contrast | paired difference | verdict |
 |---|---|---|---|
-| tokenization | NT-v2 50M 6-mer vs 3-mer | +0.0156 [-0.0119, +0.0426] | flat |
-| corpus diversity | NT 500M human-ref vs 1000G | +0.0054 [-0.0131, +0.0246] | flat |
+| tokenization | NT-v2 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
+| corpus diversity | NT 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
 | corpus breadth | NT 2.5B 1000G vs multi-species | not run, disk | **open** |
 
 All four models land 0.225 to 0.257 below BLOSUM62 with attenuation ceilings of

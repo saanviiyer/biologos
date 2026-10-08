@@ -836,8 +836,9 @@ difference of +0.0398 [-0.0219, +0.1014], higher in 11 of 21.
 
 **So the corrected claim is narrower and more useful than either the original null
 or its refutation.** At Evo 2 scale a genomic model does acquire protein-fitness
-signal, it is **statistically indistinguishable from a substitution matrix**, it is
-not better than five fitted chemistry features, and it remains far below a protein
+signal, it **does not separate from a substitution matrix** at a sample size that
+could not have caught an improvement smaller than 37% of that matrix's own score,
+it is not better than five fitted chemistry features, and it remains far below a protein
 language model. Without BLOSUM62 in the table, +0.266 would read as a substantial
 positive result.
 
@@ -1362,8 +1363,8 @@ models in one invocation:
 | NT-v2 50M 6-mer | **-0.0132** | [-0.0332, +0.0058] | 10/25 | 0.900 |
 | NT-v2 50M 3-mer | **-0.0288** | [-0.0528, -0.0025] | 8/25 | 0.866 |
 
-**Codon-aligned tokenization does not help.** The paired difference, 6-mer minus
-3-mer, is +0.0156 [-0.0119, +0.0426] and **contains zero**, so the two tokenizations
+**Codon-aligned tokenization does not help.** The paired difference, 3-mer minus
+6-mer, is -0.0156 [-0.0426, +0.0119] and **contains zero**, so the two tokenizations
 are not distinguishable from each other. Against the real bar both fail by about a
 quarter of a correlation unit: -0.241 [-0.261, -0.222] and -0.257 [-0.281, -0.231]
 against BLOSUM62 at +0.228. Codon-marginalised scores agree, -0.018 and -0.034.
@@ -1404,7 +1405,7 @@ human genomes.
 | NT 500M human-ref | 1 reference genome | +0.0032 | [-0.0149, +0.0210] | 11/25 | 0.901 |
 | NT 500M 1000G | 3,202 human genomes | -0.0022 | [-0.0236, +0.0170] | 15/25 | 0.878 |
 
-Paired difference +0.0054 [-0.0131, +0.0246], **contains zero**. Three thousand
+Paired difference, 1000G minus human-ref, -0.0054 [-0.0246, +0.0131], **contains zero**. Three thousand
 genomes of within-species variation buy nothing over a single reference genome.
 Against BLOSUM62 both fail by about the same margin as the 50M models, -0.225
 [-0.243, -0.207] and -0.230 [-0.252, -0.211].
@@ -1413,8 +1414,8 @@ Against BLOSUM62 both fail by about the same margin as the 50M models, -0.225
 
 | axis | contrast | paired difference | verdict |
 |---|---|---|---|
-| tokenization | 50M 6-mer vs 3-mer | +0.0156 [-0.0119, +0.0426] | flat |
-| corpus diversity | 500M human-ref vs 1000G | +0.0054 [-0.0131, +0.0246] | flat |
+| tokenization | 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
+| corpus diversity | 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
 | corpus breadth | 2.5B 1000G vs multi-species | **not run** | blocked |
 
 **Why breadth is not run: disk, not compute.** The 2.5B checkpoints are ~10 GB each

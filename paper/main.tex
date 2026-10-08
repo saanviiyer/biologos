@@ -39,15 +39,18 @@ weak transfer, scores $+0.143$ after its reading frame is destroyed and $+0.129$
 the reverse complement. A context dose-response is reproduced in both directions by
 flanks carrying no genomic information. Across 25 deep mutational scanning assays
 in 9 organisms, the surviving picture is that genomic-to-protein transfer is a
-property of architecture and corpus and not of scale: no Nucleotide Transformer size
-carries protein-fitness signal, the four means running from $-0.013$ to $+0.008$
-with every interval containing zero; Evo~2 7B reaches $+0.266$ but is
-statistically indistinguishable from BLOSUM62 at $+0.228$; and granting that
-family the monotone trend its four points trace, which is not itself significant,
-extrapolation to 7B still falls short of Evo~2 by a factor of 9.5. Released checkpoints let us separate two
-candidate explanations at matched architecture: codon-aligned tokenization and a
-thousandfold increase in training-corpus diversity each leave the result unchanged,
-with paired differences of $+0.016$ and $+0.005$ that both contain zero. We report
+property of architecture and corpus and not of scale: no Nucleotide Transformer
+size carries protein-fitness signal, the four means running from $-0.013$ to
+$+0.008$ with every interval containing zero; Evo~2 7B reaches $+0.266$ but does
+not separate from BLOSUM62 at $+0.228$, a non-rejection at a minimum detectable
+effect of $37\%$ of the baseline's own score rather than a demonstration of
+equivalence; and granting that family the monotone trend its four points trace,
+which is not itself significant, extrapolation to 7B still falls short of Evo~2
+by a factor of 9.5. Released checkpoints let us separate two candidate
+explanations at matched architecture: codon-aligned tokenization and a
+thousandfold increase in training-corpus diversity each leave the result
+unchanged, with paired differences, each stated as the richer option minus its
+baseline, of $-0.016$ and $-0.005$ that both contain zero. We report
 the cost of each control in model evaluations so that the protocol can be adopted
 without a compute argument.
 \end{abstract}
@@ -391,8 +394,9 @@ genetically diverse human genomes.
 
 \begin{table}[t]
 \caption{Contrasts available from released checkpoints, each varying one factor at
-matched architecture. Paired bootstrap over 25 assays. Every difference contains
-zero, and every model misses the BLOSUM62 bar by about $0.23$.}
+matched architecture. Paired bootstrap over 25 assays, each difference stated as
+the richer option minus its baseline. Every difference contains zero, and every
+model misses the BLOSUM62 bar by about $0.23$.}
 \label{tab:free}
 \centering\small
 \begin{tabular}{lcccc}
@@ -402,20 +406,21 @@ model & mean $\rho$ & 95\% CI & $\kappa$ & vs.\ B62 \\
 \multicolumn{5}{l}{\emph{tokenization, 850-genome corpus, 50M}}\\
 \quad 6-mer & $-0.0132$ & $[-0.033,+0.006]$ & $0.900$ & $-0.241$ \\
 \quad 3-mer & $-0.0288$ & $[-0.053,-0.003]$ & $0.866$ & $-0.257$ \\
-\multicolumn{5}{l}{\quad paired: $+0.0156\ [-0.012,+0.043]$, contains zero}\\
+\multicolumn{5}{l}{\quad paired, 3-mer minus 6-mer: $-0.0156\ [-0.043,+0.012]$, contains zero}\\
 \addlinespace
 \multicolumn{5}{l}{\emph{corpus diversity, 500M}}\\
 \quad human-ref & $+0.0032$ & $[-0.015,+0.021]$ & $0.901$ & $-0.225$ \\
 \quad 1000G & $-0.0022$ & $[-0.024,+0.017]$ & $0.878$ & $-0.230$ \\
-\multicolumn{5}{l}{\quad paired: $+0.0054\ [-0.013,+0.025]$, contains zero}\\
+\multicolumn{5}{l}{\quad paired, 1000G minus human-ref: $-0.0054\ [-0.025,+0.013]$, contains zero}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Table~\ref{tab:free} reports both. Neither factor moves the result. Codon-aligned
-tokenization gives a paired difference of $+0.0156$ $[-0.012,+0.043]$, and three
-thousand genomes of within-species variation give $+0.0054$ $[-0.013,+0.025]$. Both
-contain zero. All four models sit about $0.23$ below the substitution-matrix bar,
+tokenization, 3-mer minus 6-mer, gives $-0.0156$ $[-0.043,+0.012]$, and three
+thousand genomes of within-species variation, 1000G minus human-ref, give
+$-0.0054$ $[-0.025,+0.013]$. Both contain zero, and neither point estimate
+licenses the claim that the richer option is worse. All four models sit about $0.23$ below the substitution-matrix bar,
 and every attenuation ceiling lies between $0.866$ and $0.901$, so none of these
 nulls is a power failure.
 

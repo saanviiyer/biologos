@@ -30,8 +30,11 @@ assays. That interval contains zero. Against five fitted chemistry features Evo 
 is *behind*, at -0.0202.
 
 So a genomic language model at Evo 2 scale does acquire protein-fitness signal.
-It is statistically indistinguishable from a substitution matrix, it is beaten by
-five hand-chosen chemical properties, and it sits far below a protein model. The
+It does not separate from a substitution matrix, which is a non-rejection at a
+sample size that could not have caught an improvement smaller than 37% of that
+matrix's own score rather than a demonstration of equivalence. It is behind five
+hand-chosen chemical properties by -0.0202, an interval that also contains zero,
+and it sits far below a protein model. The
 Nucleotide Transformer family carries no signal at all at any scale tested, and its
 scaling trend does not reach Evo 2: extrapolated to 7B it predicts +0.028 against
 the +0.266 measured, short by a factor of 9.5.
