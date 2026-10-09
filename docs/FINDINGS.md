@@ -1515,3 +1515,53 @@ establish that there is none. The `eq` column in the table carries the same boun
 for every contrast in the family.
 
 Table in `results/interval_audit.csv`.
+
+## 42. The protein clusters, measured instead of asserted
+
+Every cluster-level interval in this repository counted units with a NAME PREFIX:
+everything in a ProteinGym id before the first author-year field. That is a
+convention. The rule it implements -- correlated proteins must not count as
+independent units -- is about sequence homology, and a name prefix cannot catch
+the case the rule exists for: two assays on homologous proteins whose ids do not
+share a prefix. The influenza-NP example in this project's own README, two strains
+at 94% identity, is exactly that case.
+
+`scripts/run_homology_clusters.py` measures it. Each assay's coding sequence is
+translated, all pairs pass a 3-mer Jaccard prefilter, and survivors are aligned
+with Smith-Waterman using BLOSUM62 and affine gaps. Clusters are single-linkage
+at >= 30% identity over >= 50 aligned columns spanning >= 50% of the shorter
+protein.
+
+**The prefix key is right on this panel: 21 measured clusters against 21 prefix
+clusters.** The only merges are the three BLAT assays, the two PTEN assays and
+the two RL401 assays, each at 100% identity over 100% coverage -- the same
+protein measured more than once, which the prefix already catches. No pair of
+different prefixes is homologous. The 21-unit count every cluster-level interval
+rests on is now measured rather than assumed.
+
+**The first run said 19, and the two extra merges were artifacts.** Without a
+coverage requirement the criterion merged BLAT with KKA2 on 34.6% identity over
+52 columns, and ESTA with the SARS-CoV-2 replicase on 31.0% over 71 columns. The
+first covers 20% of the shorter protein; the second is a 71-residue window inside
+a **7,096-residue** polyprotein, where a local aligner searching that much
+sequence will find such a window by chance. Requiring the alignment to span half
+the shorter protein removes both and restores 21.
+
+That is this project's own thesis turned on its own instrument. A weak criterion
+produced two findings; a matched control -- here, coverage -- dissolved them. The
+rejected pairs are kept in the output rather than deleted, because the near-miss
+is the instructive part.
+
+**What this does and does not license.** A k-mer prefilter with pairwise
+alignment detects close homology reliably and remote homology poorly. This rules
+out the 94%-identity case the rule was written for. It does not substitute for a
+profile search, and a pair related below roughly 25% identity could still be
+missed, so the right tool remains `mmseqs` or an HMM search if the panel grows.
+The result is a fact about these 25 assays, not a licence to use name prefixes on
+the next panel.
+
+The 165-cluster figure quoted for the full 194-assay ProteinGym set is untouched
+by this and still has no backing artifact in the repository.
+
+Table in `results/homology_clusters.csv`, one row per aligned pair with identity,
+coverage and the verdict.
