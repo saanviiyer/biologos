@@ -1600,3 +1600,42 @@ registry is cheap and should happen whenever a number is promoted to a claim. Th
 retired list is also manual: a value only gets caught once somebody adds it.
 
 Run it before quoting a number, and after changing any analysis.
+
+## 44. The four controls, packaged so somebody else can run them
+
+Everything in this log so far is a measurement of two model families. That is
+the case study. The part another person can use is the protocol, and until now
+it existed as prose plus scripts welded to this project's CSV layout, which
+nobody outside the repository could run.
+
+`biologos/validity.py` is the protocol as functions over plain arrays, with no
+model and no biology in it. `noise_ceiling` takes groups of inputs that must
+share a label and returns kappa with the attenuation it implies.
+`paired_contrast` takes two score vectors and an optional cluster label per
+observation, and returns the difference, a t interval, a sign-flip permutation
+p, the minimum detectable effect and the equivalence bound. `map_control` and
+`context_twin` take the scores and return what survived, with a verdict sentence
+attached.
+
+**The design decision that matters: nothing returns a bare significance flag.**
+Every result carries the smallest effect it could have detected. A null without
+that number is not a null, it is an unpowered measurement, and this project
+already published one of each while describing both the same way.
+
+**The generality claim is now executable rather than rhetorical.** Section 41's
+argument that the noise ceiling is the portable piece -- it needs an invariance
+the model ought to respect, not an exact map -- is only worth something if the
+code does not require a genetic code. It does not. Paraphrase sets, augmentation
+orbits and equivalent programs all supply fibres to the same function.
+
+`tests/test_validity.py` holds 24 tests, and they check the instruments rather
+than the biology. Each case is built so the answer is known in advance: a
+ceiling against its closed form, a ceiling that must flag a measurement too
+noisy to show a true correlation of 0.5, a difference that is exactly zero, an
+effect at the stated minimum detectable size that must be caught about 80% of
+the time, duplicated observations that must not buy confidence, and a signal
+that is pure leakage. The last two tests regress the module against the numbers
+published above, so the tool and the paper cannot drift apart silently.
+
+That regression is the point. Section 43 added a check that documents agree with
+data; this one makes the reusable code agree with both.

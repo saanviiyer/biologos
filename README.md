@@ -108,6 +108,44 @@ Each was paid for by a result that had to be withdrawn.
 5. **Correlated units counted once.** 194 ProteinGym assays are 165 independent
    proteins. 29 coding sequences were 24.
 
+## Using the protocol on your own model
+
+The four controls are in `biologos/validity.py` as functions over plain arrays.
+They know nothing about proteins, so any model and any modality can be put
+through them: paraphrase sets and augmentation orbits supply fibres as readily
+as synonymous codons do.
+
+```python
+from biologos.validity import noise_ceiling, paired_contrast, map_control
+
+# 1. What can this measurement show at all?
+#    fibres = groups of inputs the map sends to the same label.
+ceiling = noise_ceiling(fibres)
+print(ceiling.verdict)          # kappa 0.900: a true correlation of 0.5 ...
+
+# 2. Is the signal invariant to destroying the map?
+print(map_control(0.141, frameshift=0.143, reverse_complement=0.129).verdict)
+#   signal survives frameshift at 101% of canonical: the representation is
+#   invariant to destroying the map, so it is not at the claimed level
+
+# 3. Does the model beat the cheapest thing that works, counting correlated
+#    units once?
+r = paired_contrast(model_scores, baseline_scores, clusters=protein_ids)
+print(r.verdict)                # no difference detected (+0.0398, p=0.1974);
+#   this test could not have caught an effect below 0.0835, and equivalence
+#   holds only out to a margin of 0.0884
+```
+
+Nothing returns a bare significance flag. Every result carries the smallest
+effect it could have detected, because a null without that number is not a null
+but an unpowered measurement, and the two should not be reported in the same
+words.
+
+`pytest tests/test_validity.py` checks the instruments against cases with known
+answers -- a ceiling with a closed form, a difference that is exactly zero, a
+signal that is pure leakage -- and regresses the module against the published
+numbers above, so the tool and the paper cannot drift apart silently.
+
 ## Layout
 
 ```
