@@ -33,7 +33,7 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "scripts"))
 
 from biologos.biointerp.battery import _tcrit
 
-N_PERM, SEED, POWER_Z = 20000, 0, 2.801582  # z(0.975)+z(0.80), two-sided 80% power
+N_PERM, N_BOOT, SEED, POWER_Z = 20000, 20000, 0, 2.801582  # z(0.975)+z(0.80), two-sided 80% power
 
 
 def cluster_of(dms_id: str) -> str:
@@ -89,14 +89,30 @@ FAMILY = [
 
 
 def stats(d, rng):
-    """Mean, t interval, sign count, permutation p and 80%-power MDE for one vector."""
+    """Mean, t interval, sign count, permutation p, 80%-power MDE, equivalence bound.
+
+    The equivalence bound is the TOST result stated as a quantity rather than a
+    verdict. Equivalence within a symmetric margin Delta holds at the 5% level
+    exactly when the 90% interval lies inside +/-Delta, so the smallest margin
+    these data could support is the larger endpoint of that interval in absolute
+    value. Reporting the bound instead of a yes/no answer avoids inventing a
+    margin nobody pre-specified, and makes the honest point directly: if the
+    bound is a large fraction of the baseline's own score, the study cannot
+    establish equivalence at any margin a reader would accept.
+
+    The 90% interval is a bootstrap percentile interval, which needs no
+    distribution function the repository does not have.
+    """
     n = len(d); m = d.mean(); sd = d.std(ddof=1); se = sd / np.sqrt(n)
     t = _tcrit(n - 1)
     flips = rng.choice([-1.0, 1.0], size=(N_PERM, n))
     null = (d * flips).mean(1)
     p = float((np.abs(null) >= abs(m) - 1e-15).mean())
+    bs = d[rng.integers(0, n, size=(N_BOOT, n))].mean(1)
+    lo90, hi90 = np.percentile(bs, 5), np.percentile(bs, 95)
     return dict(n=n, mean=m, lo=m - t * se, hi=m + t * se,
-                pos=int((d > 0).sum()), p=p, mde=POWER_Z * sd / np.sqrt(n))
+                pos=int((d > 0).sum()), p=p, mde=POWER_Z * sd / np.sqrt(n),
+                eq=max(abs(lo90), abs(hi90)))
 
 
 def main():
@@ -107,7 +123,8 @@ def main():
 
     print(f"\nMultiplicity family: {k} paired contrasts, declared in FAMILY.")
     print(f"Bonferroni threshold: {alpha}/{k} = {alpha/k:.5f}\n")
-    head = f"{'contrast':29s} {'unit':8s} {'n':>3s} {'mean':>8s} {'95% t interval':>20s} {'+/n':>7s} {'p':>7s} {'MDE':>7s}"
+    head = (f"{'contrast':29s} {'unit':8s} {'n':>3s} {'mean':>8s} "
+            f"{'95% t interval':>20s} {'+/n':>7s} {'p':>7s} {'MDE':>7s} {'eq':>7s}")
     print(head); print("-" * len(head))
 
     for label, a, b in FAMILY:
@@ -122,9 +139,9 @@ def main():
             surv = "yes" if r["p"] < alpha / k else ("marginal" if r["p"] < alpha else "no")
             print(f"{label:29s} {unit:8s} {r['n']:3d} {r['mean']:+8.4f} "
                   f"[{r['lo']:+7.4f}, {r['hi']:+7.4f}] {r['pos']:3d}/{r['n']:<3d} "
-                  f"{r['p']:7.4f} {r['mde']:7.4f}")
+                  f"{r['p']:7.4f} {r['mde']:7.4f} {r['eq']:7.4f}")
             rows.append([label, a, b, unit, r["n"], r["mean"], r["lo"], r["hi"],
-                         r["pos"], r["p"], alpha / k, surv, r["mde"]])
+                         r["pos"], r["p"], alpha / k, surv, r["mde"], r["eq"]])
         print()
 
     out = ROOT / "results/interval_audit.csv"
@@ -132,11 +149,23 @@ def main():
         w = csv.writer(f)
         w.writerow(["contrast", "treatment", "baseline", "unit", "n", "mean_diff",
                     "ci_lo_t", "ci_hi_t", "n_positive", "p_permutation",
-                    "bonferroni_alpha", "survives_bonferroni", "mde_80pct_power"])
+                    "bonferroni_alpha", "survives_bonferroni", "mde_80pct_power",
+                    "smallest_equivalence_margin"])
         w.writerows(rows)
 
     core = ["ESM-2 650M", "chemistry ridge", "Evo 2 7B", "BLOSUM62", "NT-v2 50M"]
     panel = sorted(set.intersection(*(set(s[n]) for n in core)))
+    # Cluster-level, to match the cluster-level bound it is compared against.
+    b62 = float(np.mean([np.mean(v) for v in
+                         _group(sorted(s["BLOSUM62"]), s["BLOSUM62"], cl).values()]))
+    key = [r for r in rows if r[0] == "Evo 2 vs BLOSUM62" and r[3] == "cluster"][0]
+    print(f"Equivalence, the test nobody ran. For Evo 2 against BLOSUM62 at the")
+    print(f"cluster level the smallest symmetric margin these data could support is")
+    print(f"{key[13]:.4f}, which is {key[13]/b62:.0%} of BLOSUM62's own score of {b62:+.4f}.")
+    print("No margin that large is one a reader would accept, so the honest statement")
+    print("is that this study cannot establish equivalence, only fail to reject")
+    print("difference. The 'eq' column reports the same bound for every contrast.\n")
+
     print("Marginal means with t intervals (these replace the m +/- 1.96*SE headline table).")
     print(f"Restricted to the {len(panel)} assays every scorer shares; Evo 2 covers "
           f"{len(s['Evo 2 7B'])} in all, and mixing panels is how a marginal stops "

@@ -1496,4 +1496,22 @@ paired contrast. The script restricts every marginal to the 25 assays all scorer
 share. Mixing panels is how a marginal stops agreeing with the contrast it
 belongs to.
 
+**The equivalence test nobody ran, reported as a bound rather than a verdict.**
+Saying a result "is statistically indistinguishable" from a baseline asserts
+equivalence, which a failure to reject does not establish. The proper test is
+TOST, and TOST needs a margin somebody pre-specified; nobody did here, and
+inventing one after seeing the data would be the same error in a new costume.
+
+So the script reports the quantity instead. Equivalence within a symmetric margin
+holds at the 5% level exactly when the 90% interval sits inside that margin, so
+the smallest margin these data could support is the larger endpoint of that
+interval in absolute value. For Evo 2 against BLOSUM62 at the cluster level it is
+**0.0884, which is 40% of BLOSUM62's own cluster-level score of +0.2183**.
+
+No reader would accept "equivalent to within 40% of the baseline" as a claim of
+equivalence. The honest statement is the narrow one: this study fails to reject a
+difference between Evo 2 and a substitution matrix, and is not powered to
+establish that there is none. The `eq` column in the table carries the same bound
+for every contrast in the family.
+
 Table in `results/interval_audit.csv`.
