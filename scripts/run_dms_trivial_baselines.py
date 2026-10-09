@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Trivial chemistry baselines for the genomic-to-protein transfer result (section 18).
 
-Section 18 reports ESM-2 650M at Spearman +0.466 and Nucleotide Transformer v2 at
+Section 18 reports ESM-2 650M at Spearman +0.465 and Nucleotide Transformer v2 at
 -0.013 on 25 DMS assays, and reads the gap as the distance a genomic model has to
-travel. That reading is only valid if +0.466 is a hard number to reach. Three
+travel. That reading is only valid if +0.465 is a hard number to reach. Three
 separate results in this project would have read as model successes without a
 trivial baseline next to them -- mutation count beating ESM-2 on coverage, one-hot
 beating learned embeddings under a hold-out-residue split, BLOSUM62 plus two

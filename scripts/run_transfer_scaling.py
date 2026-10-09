@@ -9,7 +9,7 @@ model's protein-fitness skill is a function of scale.
 
 Five points are now available on identical assays: Nucleotide Transformer v2 at
 50M, 100M, 250M and 500M, and Evo 2 at 7B, a 140x span. The reference lines that
-make the numbers mean anything are BLOSUM62 at +0.228 and ESM-2 650M at +0.466,
+make the numbers mean anything are BLOSUM62 at +0.228 and ESM-2 650M at +0.465,
 both measured on the same assays.
 
 The question the fit answers is not "does scale help" but "does the NT trend
@@ -75,7 +75,7 @@ def main():
     print("  scaling account its best case rather than reporting an established trend.")
 
     print("\n--- what that trend extrapolates to ---")
-    for name, target in [("BLOSUM62 (+0.228)", BLOSUM62), ("ESM-2 650M (+0.466)", ESM2)]:
+    for name, target in [("BLOSUM62 (+0.228)", BLOSUM62), ("ESM-2 650M (+0.465)", ESM2)]:
         need = (target - icept) / slope
         print(f"  to reach {name:22s}: 10^{need:.1f} = {10**need:.3g} parameters")
     evo_pred = slope * np.log10(7e9) + icept

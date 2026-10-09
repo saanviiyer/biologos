@@ -354,7 +354,7 @@ differs.
 
 | proxy | mean rho over 25 assays | 95% CI | assays positive |
 |---|---|---|---|
-| ESM-2 650M on the protein | **+0.466** | [+0.395, +0.536] | **25/25** |
+| ESM-2 650M on the protein | **+0.465** | [+0.395, +0.536] | **25/25** |
 | NT-v2 50M on the CDS | **-0.013** | [-0.033, +0.007] | 10/25 |
 | NT-v2 50M, codon-marginalised | **-0.019** | [-0.041, +0.004] | -- |
 
@@ -399,7 +399,7 @@ features reach 61%. ESM-2's margin over BLOSUM62, paired within assay, is
 **+0.237** [+0.178, +0.296], higher in 23 of 25.
 
 **This makes the claim cheaper and stronger rather than weaker.** The bar a
-genomic model has to clear is **+0.228, not +0.466**, and it does not clear it:
+genomic model has to clear is **+0.228, not +0.465**, and it does not clear it:
 NT-v2 loses to BLOSUM62 by **+0.241** [+0.200, +0.283] in 24 of 25 assays. The
 headline is therefore best stated as *a genomic language model scores below a
 substitution matrix on protein fitness*, which needs no appeal to a large protein
@@ -1565,3 +1565,38 @@ by this and still has no backing artifact in the repository.
 
 Table in `results/homology_clusters.csv`, one row per aligned pair with identity,
 coverage and the verdict.
+
+## 43. A check that re-derives every headline number from the result files
+
+Six numbers were wrong at once on 2026-10-08 and every one failed the same way:
+computed correctly at some point, written into prose, then left behind when the
+computation changed. The scaling figures outlived a substring bug. Both Stage 0
+contrasts were published in the direction opposite to the one their sentences
+implied. A marginal was quoted over 32 assays while its own paired contrast used
+25. None of these is a thinking error; all of them are bookkeeping, and
+bookkeeping is what a script should do.
+
+`scripts/check_reported_numbers.py` does two things and exits non-zero on either
+failure. It recomputes fifteen headline quantities from `results/` and checks the
+string the documents use still matches, comparing at the precision the documents
+actually write rather than at full precision, so a correctly-rounded value is not
+flagged as drift. And it scans every document for twelve values known to be
+wrong, failing if any survives anywhere.
+
+**It found an error on its first real run.** ESM-2's mean over the 25-assay panel
+is 0.46545, which rounds to **+0.465**. Four documents and two scripts said
+**+0.466**. The four-decimal form, +0.4655, was correct everywhere it appeared --
+only the three-decimal form was wrong, which is exactly why it survived every
+reading: a last-digit rounding error is invisible to an eye that already believes
+the number. Corrected in `paper/main.tex`, `docs/FINDINGS.md`,
+`scripts/run_transfer_scaling.py` and `scripts/run_dms_trivial_baselines.py`. The
++0.466 at line 1322 is a different quantity, a context-arm correlation, and is
+untouched.
+
+**What it does not do.** The registry holds fifteen quantities against well over
+sixty inferential contrasts in this log, so passing means the headline numbers
+agree with the data, not that every number in the file does. Extending the
+registry is cheap and should happen whenever a number is promoted to a claim. The
+retired list is also manual: a value only gets caught once somebody adds it.
+
+Run it before quoting a number, and after changing any analysis.

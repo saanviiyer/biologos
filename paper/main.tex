@@ -329,7 +329,7 @@ A substitution matrix with no model of any kind reaches 49\% of ESM-2 and is
 positive on 24 of 25 assays. Five fitted chemistry scalars with weights learned on
 other protein clusters reach 61\%. ESM-2's genuinely learned margin over fitted
 chemistry is $+0.179$, not $+0.465$. The bar a genomic model must clear is
-therefore $+0.228$, not $+0.466$.
+therefore $+0.228$, not $+0.465$.
 
 The Nucleotide Transformer does not clear it, losing to BLOSUM62 by $+0.241$
 $[+0.200,+0.283]$ in 24 of 25 assays. Its attenuation ceiling is $0.900$, so this
@@ -465,7 +465,7 @@ contribution sits.
 
 \citet{boshar2024glm} report Nucleotide Transformer v2 500M matching or beating
 ESM-2 on three of five protein tasks. We report the same family at $\rho=-0.013$
-against ESM-2's $+0.466$. Both can hold, and the protocol says why.
+against ESM-2's $+0.465$. Both can hold, and the protocol says why.
 
 Fine-tuning fits a readout on top of the representation. Section~\ref{sec:map}
 shows that the genomic representation carries residue identity through the codon,
