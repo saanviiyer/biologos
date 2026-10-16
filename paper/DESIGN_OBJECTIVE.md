@@ -256,11 +256,15 @@ D3LM and DPLM generate sequence itself. The distinction is between the two, not
 between this arm and a repository that had never loaded a generative model.
 
 The posture below is a boundary, not a preference. It is the posture of
-`RESEARCH/HARNESS.md`, applied here. **The repository has no `SAFETY.md` of its
-own**, while eight sibling projects do, and HARNESS.md B7 requires advisor
-disclosure before any run with the advisor named in a responsible-use statement.
-Writing `biologos/SAFETY.md`, naming the advisor, is a **prerequisite to this arm**
-and not an output of it. Nothing below is a substitute for that file.
+`RESEARCH/HARNESS.md`, applied here, and the full version is now in
+`biologos/SAFETY.md`, drafted 15 Oct 2026 against HARNESS.md B1 to B7 after the
+gate found the repository had none while eight sibling projects did.
+
+**That file is not yet in force.** Its advisor and disclosure-date fields are
+unfilled, so HARNESS.md B7 is unmet, and it says in its own words that **no DPLM or
+D3LM checkpoint is downloaded until they are filled**. Stage 0 step 1 of this
+document is blocked behind it. `SAFETY.md` governs; what follows is the summary for
+a reader of this design.
 
 - **Likelihood evaluation only.** Masked marginals at fixed positions in sequences
   that already exist. No sampling, no denoising to completion, no conditional
