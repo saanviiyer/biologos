@@ -1416,13 +1416,149 @@ Against BLOSUM62 both fail by about the same margin as the 50M models, -0.225
 |---|---|---|---|
 | tokenization | 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
 | corpus diversity | 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
-| corpus breadth | 2.5B 1000G vs multi-species | **not run** | blocked |
+| corpus breadth | 2.5B 1000G vs multi-species | **not run** | unblocked 9 Oct, not yet run |
+
+**Added 13 Oct 2026, a precondition on the breadth arm.** Section 45 tried to predict
+this row from corpus statistics alone and could not, because only one of the two
+exponents the prediction needs is estimable on DNA. It found something that bears on
+running the arm instead: pooling twelve microbial genomes moves the corpus's
+correlation exponent outside the entire range spanned by its own twelve members,
+driven by a GC spread of 0.395 to 0.715, while slicing and reordering a single genome
+does not move it. A multi-species arm therefore differs from a single-species arm in
+composition as well as breadth, and the two arms should be reported with their GC and
+correlation structure beside them.
 
 **Why breadth is not run: disk, not compute.** The 2.5B checkpoints are ~10 GB each
 and the machine was at 100% capacity with 138 MB free. The failed partial download
 was removed, leaving 2.4 GB, which is still short of one model let alone the pair.
 The HuggingFace cache holds 35 GB and nothing in it was deleted beyond my own
 incomplete blob.
+
+**Update, 9 Oct 2026: the disk blocker is resolved and the contrast is runnable.**
+Free space on `/System/Volumes/Data` is 25 GB, above the ~20 GB the pair needs,
+with nothing deleted to get there. `models--InstaDeepAI--nucleotide-transformer-2.5b-multi-species`
+already holds 48 KB of config, vocab and tokenizer files and no weights, so an
+earlier session fetched metadata only and the download resumes cleanly. Two
+caveats before starting it. Free space is a moving target: another session was
+writing `facebook--w2v-bert-2.0` and `facebook--tribev2` into the same cache
+during this check and took 5 GB while it ran, so re-read `df` in the same breath
+as launching. The acute drop is explained: 30.7 GB at 16:00 to 25 GB at 16:05
+coincided exactly with another session downloading `facebook--w2v-bert-2.0`
+(2.32 GB) and `facebook--tribev2` (0.71 GB) and building a venv, and the
+"3 GB per 10 minutes" rate was extrapolated from that one five-minute window.
+
+**The residual drain is swap, and it is identified.** Free space ran 27.79 GB
+at 02:53, 21.86 at 03:00, 22.86 at 03:03, 18.17 at 03:45. The cause is not on
+the Data volume at all: `/System/Volumes/VM` is a SEPARATE volume (disk3s6)
+sharing the same APFS container, and it now holds 13 one-gigabyte swapfiles,
+13 GB in total, with `vm.swapusage` reporting 11.76 GB in use. Four of those
+files were created tonight at 00:56, 02:18, 02:45, 02:55 and two more at 02:57
+-- precisely when free space began falling. macOS is growing swap under memory
+pressure, and because swap draws from the shared container it reduces the free
+space reported for Data while `find /System/Volumes/Data -xdev` can never see
+it. A full write audit confirms only ~3.2 GB was written anywhere on Data in
+150 minutes, which cannot account for a 9.6 GB fall.
+
+Two candidate explanations were tested and rejected rather than assumed:
+deleted-but-still-open files hold 0.05 GB across 9 descriptors, and there are
+no APFS snapshots on either volume. An earlier version of this note also
+"ruled out swap (no swapfiles)" by checking `/private/var/vm`, which is the
+pre-Catalina location and is empty on this system; the live path is
+`/System/Volumes/VM`. That was a false absence from looking in the wrong place.
+
+**Disk and memory are therefore the same constraint, not two.** Every
+gigabyte of swap pressure costs a gigabyte of the space the checkpoints need,
+so loading a 10 GB fp32 model to score it would consume the disk budget for
+downloading it. The fix is to reduce memory pressure before starting, not to
+free more disk: pageins stand at 65.8 million, and the resident set is
+dominated by browser and app processes rather than by anything in this project.
+
+Two earlier versions of this note asserted stability on evidence that was
+void. Every "nothing was written in the last N minutes" check used
+`find -newermt '-N minutes'`, which is a GNU form. `find` on this machine is
+`bfs`, which rejects it as an invalid timestamp, prints the error to stderr and
+**exits 0 with empty output**. With stderr suppressed that is indistinguishable
+from a clean negative result. The BSD/bfs form is `-mtime -150m`. Treat any
+absence-of-writes claim in this file's history as unsupported unless it names
+the working syntax. Companion failure mode for `grep` is recorded below.
+
+Rule-outs that do still hold, because they came from other tools: APFS local
+snapshots (`tmutil`, none on either volume), Time Machine (idle), Docker (not
+running; `Docker.raw` is sparse, 926 GB apparent and 8.8 GB real, untouched
+since 31 Aug), Photos and iCloud (0% CPU), swap (no swapfiles), Spotlight
+(`mds_stores` holds no files open for write), HF cache size (`du`, flat at
+33.79 GB), and host load (3.84/4.13/8.80 across 14 cores on AC).
+
+**The axis is still not run, and disk is no longer the binding constraint.**
+Memory is. The machine has 24 GB of RAM with about 6.6 GB free+inactive;
+`biologos/glm.py` calls `AutoModelForMaskedLM.from_pretrained` with no
+`torch_dtype`, so NT 2.5B loads at fp32 for roughly 10 GB of weights; the
+device helper prefers MPS, which is unified memory, so weights and activations
+compete with everything else; and `run_dms_transfer.py` masks in chunks of 16
+by repeating the input row, over targets up to 420 codons. Also both 2.5B
+checkpoints are absent rather than one, so the download is the full ~20 GB.
+
+The intended protocol when it runs: score the two models in SEPARATE
+invocations of `scripts/run_dms_transfer.py --nt <one model> --context cds`,
+appending to `results/stage0_corpus2500m.csv`, deleting the first checkpoint
+before fetching the second. Peak disk is then ~10 GB rather than ~20 GB, and
+the paired contrast is unaffected because it is assembled in
+`scripts/analyze_stage0.py` from the `nt_model` column rather than at scoring
+time. Do not switch one arm to fp16 to fit memory: the 50M and 500M contrasts
+already banked are fp32, and changing dtype on one arm of a matched-architecture
+comparison introduces exactly the confound this project exists to detect.
+
+**Checkpoint sizes, measured from the Hub rather than assumed.** Each 2.5B repo
+is 29.87 GB, not ~10 GB, because InstaDeep ships the weights three times: a
+TensorFlow `tf_model-*.h5` copy, a PyTorch `pytorch_model-*.bin` copy and a JAX
+`jax_model/pytree_ckpt.joblib`. The PyTorch subset that `transformers` actually
+needs is 10.19 GB (9.913 + 0.278 GB across two shards, plus config, vocab and
+tokenizer), so 19.68 GB per model is avoidable. `from_pretrained` selects the
+PyTorch files on its own, but a bare `snapshot_download` would fetch all of it
+and pull 59.7 GB for the pair. Fetch with
+`allow_patterns=["pytorch_model*", "config.json", "tokenizer*", "vocab.txt",
+"special_tokens_map.json"]`. The "~20 GB for the pair" figure in
+`paper/DESIGN.md` is right for the PyTorch subset (20.38 GB) and wrong by a
+factor of three for a naive download. At 18 GB free, one model fits with
+7.8 GB of margin and the pair does not fit at all, so the sequential protocol
+above is required rather than merely prudent.
+
+**Progress, 10 Oct 2026 ~04:00.** Arm 1 of the breadth contrast is fetched and
+verified: `nucleotide-transformer-2.5b-1000g`, PyTorch subset only, snapshot
+`46f2210107b1`, both shards at full size with no `.incomplete` blobs and the
+index `total_size` of 10.19 GB matching disk. It lives in the HuggingFace cache
+and survives a restart, so this step does not need repeating.
+
+Scoring was NOT started, and the reason is swap exhaustion rather than plain
+memory pressure. `vm.swapusage` reports 12.13 GB used of 13.31 GB, so only
+1.19 GB of swap headroom remains alongside ~5.9 GB of free RAM. Loading 10.19 GB
+of fp32 weights against ~7 GB of combined headroom would force macOS to grow
+swap, and swap allocation consumes the same container free space that arm 2's
+10.19 GB download needs, of which only ~13 GiB remains. Closing the browser did
+not help: macOS does not shrink swapfiles when pressure falls, and all 13
+persisted.
+
+A restart is the single action that resolves both constraints, releasing the
+13 GB of swapfiles back to the container and restoring the full 24 GB of RAM.
+Order afterwards: score arm 1 from cache, delete its weights, fetch and score
+arm 2, then `scripts/analyze_stage0.py`. No fp16 shortcut, per the note above.
+
+One standing hazard unrelated to this run: `Docker.raw` is a sparse file with a
+926 GB apparent size and 8.8 GB on disk, untouched since 31 Aug. If Docker is
+ever started and that image fills, it can consume the entire volume. If a buffer is wanted first, ~6.8 GB
+is available with no judgment call, all byte-duplicates or unreferenced:
+`~/.cache/torch/hub/checkpoints/esm2_t33_650M_UR50D.pt` (2.60 GB, duplicate of
+the HF copy), the `prot_t5_xl_half_uniref50-enc` `pytorch_model.bin` revision
+(2.42 GB, same weights as the `safetensors` revision), `models--google--timesfm-3.0-pytorch`
+(1.23 GB, orphaned: no code loads it, and the only references are eleven stale
+Bash permission grants in `STANFORD SURF/CortSeer/.claude/settings.local.json`
+naming a script and venv that no longer exist) and the pip cache (0.53 GB).
+An earlier version of this note claimed zero references anywhere in RESEARCH.
+That was wrong, and wrong for a reason worth recording: in this shell `grep` is
+a function wrapping ugrep with `--ignore-files`, so a recursive grep silently
+skips paths matched by any `.gitignore` in the tree, `.claude/` among them. Use
+`grep --no-ignore`, or `find` piped to grep, when absence of a match is the
+claim being made.
 
 **What this does to the ladder.** Two of three free axes are null, which argues
 *against* the pretraining program in `paper/DESIGN.md`, not for it. If breadth is
@@ -1639,3 +1775,192 @@ published above, so the tool and the paper cannot drift apart silently.
 
 That regression is the point. Section 43 added a check that documents agree with
 data; this one makes the reusable code agree with both.
+
+---
+
+## 45. The scaling exponent cannot be read off a DNA corpus, and pooling species breaks the half of it that works
+
+13 Oct 2026. `scripts/corpus_exponents.py`, `scripts/beta_across_genomes.py`,
+`scripts/pooling_control.py`. No model, no GPU, no checkpoint. Everything here is
+plug-in estimation off k-mer counts and runs in minutes on a laptop.
+
+### What prompted it
+
+Ganguli derives the data-scaling exponent of an autoregressive model from two
+properties of the training corpus rather than of the network:
+
+    conditional entropy decay       h(k) - h_inf  ~  k^(-gamma)
+    token-token correlation decay   I(d)          ~  d^(-beta)
+
+giving `L(P) ~ P^(-gamma/2beta)` for a model trained on `P` tokens, with
+gamma measured at 0.348 on TinyStories and 0.278 on WikiText.
+
+Both exponents are properties of the data. If that holds for DNA, it would resolve
+the one Stage 0 axis this project has never been able to afford. Section 40's
+scoreboard closed tokenization and within-species corpus diversity as flat and left
+**corpus breadth not run**, blocked on roughly 10 GB of checkpoints per arm. A theory
+that predicts the breadth result from counting would get the answer for free, and
+would also say whether the two flat axes were flat for a reason.
+
+Corpora are the genomes already on disk under `crosstalk/data/genomes`: human
+chr21, twelve named microbial species, and the `N_` contig set. **Every corpus is cut
+to the same 4,000,000 bases.** Plug-in entropy bias depends on sample size, so an
+unmatched comparison would show an exponent difference that is entirely bias.
+
+### beta is measurable, and both of its controls pass
+
+Human chr21, 4 Mb, fitted over `4 <= d <= 2048`: **beta = 0.816, r2 = 0.977.** A clean
+power law over nearly three decades.
+
+The controls are what make that number mean something.
+
+| corpus | beta | r2 | I(d=1) | I(d=8) | I(d=2048) |
+|---|---|---|---|---|---|
+| human chr21 | **0.816** | 0.977 | 0.0477 | 0.0023 | 0.00003 |
+| mononucleotide shuffle | 0.001 | 0.000 | -0.0000 | -0.0000 | -0.0000 |
+| order-5 Markov surrogate | 1.232 | 0.502 | 0.0478 | 0.0001 | -0.0000 |
+
+The shuffle is the negative control and collapses to exactly zero, so the measurement
+is reading correlation rather than returning a slope for anything.
+
+The Markov surrogate is the informative one. Fitted to human chr21 and sampled from,
+it reproduces the real genome's mutual information **exactly** at short range --
+0.0478 against 0.0477 at `d=1`, 0.0080 against 0.0080 at `d=2` -- and then falls to
+zero by `d=8`, because a finite-order chain has no correlation past its order. So
+human DNA's mutual information beyond 8 bases is structure that no order-5 Markov
+chain reproduces, and its power-law fit is not an artifact of the fitting window.
+
+That is worth putting beside section 32, which found a genomic language model barely
+beats an order-5 Markov chain at next-nucleotide prediction. Both can be true: the
+order-5 chain captures nearly all of the *predictive* signal at the next token while
+missing all of the long-range correlation. The thing the models fail to exploit is
+visible in the corpus by counting.
+
+### gamma is not estimable here, and the shuffle control is what proves it
+
+Before fitting gamma anywhere, `gamma_gate` establishes how far a plug-in `h(k)` can
+be trusted. An order-5 Markov chain has `h(k)` exactly constant for every `k > 5`, so
+any decline past `k = 6` on a sample from that chain is pure estimation bias. Drift
+from `h(6)` on the surrogate:
+
+| k | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|
+| drift, bits | +0.00000 | -0.00000 | -0.00019 | **-0.00537** |
+
+So `k <= 8` is admissible at 4 Mb and `k = 9` is not. The gate works, and it is also
+the thing that blocks the result:
+
+| corpus | h(2) | h(4) | h(6) | h(8) | gamma | r2 |
+|---|---|---|---|---|---|---|
+| human chr21 | 1.9357 | 1.9208 | 1.9064 | 1.8431 | 0.014 | 0.840 |
+| mononucleotide shuffle | 1.9834 | 1.9834 | 1.9834 | 1.9834 | **0.013** | 0.430 |
+| order-5 Markov surrogate | 1.9357 | 1.9207 | 1.9057 | 1.9003 | 0.204 | 0.971 |
+
+**Real human DNA returns gamma = 0.014 and a corpus with every correlation destroyed
+returns gamma = 0.013.** The estimator carries no information about structure, so the
+number is not a measurement. The reason is visible in the `h(k)` column: human `h(k)`
+is still falling at `k = 8`, and falling faster than at `k = 4`, so there is no
+asymptote inside the admissible window for a three-parameter fit to find. `h_inf`
+absorbs the level, `gamma` collapses to its lower bound, and `r2 = 0.840` describes a
+curve that happens to be fitted, not an exponent that was recovered.
+
+**The script now refuses to report it.** `--gamma-tol` compares every corpus's gamma
+against the shuffled control's, and suppresses the ratio with a stated reason whenever
+the separation is inside the tolerance. The one row that survives is the order-5 Markov
+surrogate, at gamma 0.204 against the shuffle's 0.013. That is the right answer for the
+wrong-looking reason: the surrogate is the only corpus here whose conditional entropy
+genuinely plateaus inside the admissible window, because it was built with a finite
+memory, so it is the only one where a three-parameter fit is identified. Real DNA is
+void and a synthetic order-5 chain is not, which is as clean a statement of the problem
+as the table can make.
+
+**So `gamma/2beta` cannot be reported, and the ratio column in
+`results/corpus_exponents.json` is void.** Half of the construction transfers to DNA
+and half does not. Getting gamma would need either far more sequence, to push the gate
+past `k = 8`, or a model-based entropy estimate, which is the pretraining cost this
+was meant to avoid.
+
+That DNA's conditional entropy has not converged by 8 bases of context is itself
+consistent with the beta power law: there is structure at every scale the estimator
+can reach. It is a reason the shortcut fails, not a result about genomes.
+
+### Pooling species destroys the power law, and composition is why
+
+The pooled multi-species corpora do not merely have a different beta. Their `I(d)`
+stops decaying and **rises**: the 12-species pool runs 0.00098 at `d=4` to 0.00113 at
+`d=61` to 0.00146 at `d=937` to 0.00177 at `d=2048`, on the log-spaced grid the script
+uses. A rising mutual information is the signature of a
+distance-independent floor, not of lost structure.
+
+Two explanations: concatenating slices at all, or pooling sources of different base
+composition. They differ on one genome sliced and reordered the same way. Matched at
+285,715 bases per slice, `d <= 512`:
+
+| arm | beta | r2 |
+|---|---|---|
+| 12 single genomes, each alone | **+0.299 mean, sd 0.111, range +0.194 to +0.507** | 0.12 to 0.41 |
+| one genome, 12 slices, order randomised | +0.500 | 0.299 |
+| pooled across the same 12 genomes | **-0.051** | 0.006 |
+
+Slicing one genome into twelve pieces and shuffling their order moves beta from
++0.507, that genome's own value, to +0.500. Pooling twelve genomes puts beta
+**outside the entire single-genome distribution**, below all twelve. Concatenation is
+exonerated; heterogeneity is not. GC content across these genomes has sd 0.117 and
+spans 0.395 to 0.715, which is the floor's source.
+
+**A withdrawn interval.** `pooling_control.py` first bounded beta with a block
+bootstrap, and no interval it produced contained its own point estimate. The
+bootstrap is invalid for this statistic: resampling contiguous blocks with
+replacement puts the same block into one sequence more than once, planting identical
+segments at assorted separations and inflating `I(d)` in a distance-dependent way, so
+it biases the slope it was supposed to bound. The spread above is across the twelve
+independent genomes instead, which owes nothing to resampling. The bootstrap numbers
+are left in the JSON under a note rather than deleted.
+
+The bacterial `r2` of 0.12 to 0.41 is poor, so these betas are slopes through noisy
+points and the single-genome spread should be read as a range, not an estimate. Only
+the human 4 Mb fit at `r2 = 0.977` is a clean power law. The pooled arm sits outside
+the range regardless of how generously the range is read.
+
+### What this changes for the breadth arm
+
+The cheap route failed: breadth cannot be predicted from corpus statistics, because
+gamma is the half that does not transfer.
+
+The pooling result is the part that survives, and it is a warning about the experiment
+rather than a substitute for it. **A multi-species pretraining corpus has a
+composition-heterogeneity structure that a single-species corpus does not, and that
+structure is large enough to move the corpus's correlation exponent outside the entire
+range spanned by its own members.** Any effect the breadth contrast finds is therefore
+confounded with between-species composition unless composition is matched or measured.
+Section 40 recorded breadth as unblocked and unrun; this adds a precondition to running
+it, which is that the arms be reported with their GC and correlation structure beside
+them, so a difference attributed to breadth can be told apart from a difference in
+composition.
+
+It also cuts the other way, and in the direction this project keeps finding. If
+heterogeneous pooling changes a corpus's measurable statistics this much, the two flat
+Stage 0 axes become more interesting rather than less: tokenization and within-species
+diversity were flat **despite** being axes along which corpus statistics do move.
+
+### What this does and does not establish
+
+**Does:** the correlation exponent beta is measurable on a genome by counting, with a
+negative control that collapses and a Markov control that reproduces short-range
+correlation exactly and then fails. Pooling species breaks it, and composition rather
+than concatenation is the cause.
+
+**Does not:**
+
+- No model was trained, so nothing here tests whether `L(P) ~ P^(-gamma/2beta)`
+  actually holds for DNA. It establishes that one of the two inputs is not obtainable
+  by this route, which is a statement about the shortcut.
+- gamma is reported as not estimable, which is not the same as small. The gate bounds
+  the admissible `k`, and within that window the estimator is uninformative.
+- One human chromosome, twelve microbial genomes, one contig set, one alphabet, one
+  matched budget of 4 Mb. The gate's ceiling moves with corpus size, so `k <= 8` is a
+  fact about 4 Mb and not about DNA.
+- Nucleotides are not the tokens any of these models actually read. Evo 2 and the
+  Nucleotide Transformer tokenize differently, and section 39 found the tokenization
+  axis flat, but these exponents are measured on single bases and a 6-mer
+  tokenization would have to be measured separately.

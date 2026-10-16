@@ -133,11 +133,13 @@ models substitutes.
 |---|---|---|---|
 | tokenization | NT-v2 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
 | corpus diversity | NT 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
-| corpus breadth | NT 2.5B 1000G vs multi-species | not run, disk | **open** |
+| corpus breadth | NT 2.5B 1000G vs multi-species | not run | **open** |
 
 All four models land 0.225 to 0.257 below BLOSUM62 with attenuation ceilings of
 0.866 to 0.901, so none of these is a power failure. The 2.5B pair needs ~20 GB of
-free disk and the machine had 138 MB.
+free disk and the machine had 138 MB. As of 9 Oct 2026 that is no longer
+true: 25 GB is free and the pair is runnable without deleting anything, so the
+axis is open on host load rather than on space.
 
 **The gate as written said to make the case explicitly before proceeding, so here
 it is: do not fund the ladder yet.** Two of the three factors separable without

@@ -1,0 +1,101 @@
+{
+  "settings": {
+    "bases_per_slice": 285715,
+    "dmax": 512,
+    "beta_dmin": 4,
+    "n_genomes": 12
+  },
+  "per_genome": [
+    {
+      "genome": "M_154_Tolypothrix_bouteillei.fna.gz",
+      "gc": 0.41810895472761317,
+      "beta": 0.5071508415017617,
+      "beta_r2": 0.2529581526839154
+    },
+    {
+      "genome": "M_329_Mesorhizobium_albiziae.fna.gz",
+      "gc": 0.6293334266664333,
+      "beta": 0.2075052677297696,
+      "beta_r2": 0.3518731209434156
+    },
+    {
+      "genome": "M_332_Sphingomicrobium_aestuariivivum.fna.gz",
+      "gc": 0.661113347216632,
+      "beta": 0.23734625647131014,
+      "beta_r2": 0.39519014526190877
+    },
+    {
+      "genome": "M_375_Arboricoccus_pini.fna.gz",
+      "gc": 0.6385944035139912,
+      "beta": 0.2355202040735062,
+      "beta_r2": 0.4142234604984022
+    },
+    {
+      "genome": "M_405_Fulvimonas_soli.fna.gz",
+      "gc": 0.7146037134907163,
+      "beta": 0.19377185504816785,
+      "beta_r2": 0.14376559805824862
+    },
+    {
+      "genome": "M_49_Luteococcus_japonicus.fna.gz",
+      "gc": 0.6808252979367552,
+      "beta": 0.25128653584383476,
+      "beta_r2": 0.38892271810133194
+    },
+    {
+      "genome": "M_520_Sulfobacillus_thermosulfidooxidans.fna.gz",
+      "gc": 0.49211976970057575,
+      "beta": 0.4727113962071945,
+      "beta_r2": 0.27049693516000484
+    },
+    {
+      "genome": "M_549_Agitococcus_lubricus.fna.gz",
+      "gc": 0.43701240746898135,
+      "beta": 0.4429176509447384,
+      "beta_r2": 0.34065500215492905
+    },
+    {
+      "genome": "M_597_Salibacter_halophilus.fna.gz",
+      "gc": 0.39524351189122026,
+      "beta": 0.2533167687369135,
+      "beta_r2": 0.12081366651022918
+    },
+    {
+      "genome": "M_59_Abiotrophia_defectiva.fna.gz",
+      "gc": 0.4585968535078662,
+      "beta": 0.21030656735526074,
+      "beta_r2": 0.23310736555253864
+    },
+    {
+      "genome": "M_74_Herminiimonas_arsenitoxidans.fna.gz",
+      "gc": 0.4970092574768563,
+      "beta": 0.3053805277214785,
+      "beta_r2": 0.2690629662862115
+    },
+    {
+      "genome": "M_96_Parasporobacterium_paucivorans.fna.gz",
+      "gc": 0.4384999037502406,
+      "beta": 0.27364388319359323,
+      "beta_r2": 0.17332835589300843
+    }
+  ],
+  "single_genome_beta": {
+    "mean": 0.29923814623562744,
+    "sd": 0.11053705666322002,
+    "min": 0.19377185504816785,
+    "max": 0.5071508415017617,
+    "pct2.5": 0.19754854353560833,
+    "pct97.5": 0.4976799940457557
+  },
+  "pooled_multispecies": {
+    "beta": -0.05054224577632696,
+    "beta_r2": 0.00627095960211943,
+    "n_bases": 3428580
+  },
+  "pooled_onespecies_reordered_control": {
+    "beta": 0.4995675238569784,
+    "beta_r2": 0.29943125933503256,
+    "n_slices": 12
+  },
+  "gc_sd_across_genomes": 0.11683160567074681
+}
