@@ -28,8 +28,10 @@ known. This makes biological sequence models an unusually sharp setting for a
 question the rest of machine learning can only ask loosely: when a model trained
 on one representation appears to know something about another, is that transfer,
 or an artifact of how the question was posed? We give four controls that decide
-this, each cheap and each reusable outside biology, and apply them to genomic and
-protein language models. The controls are a noise ceiling read off the model's own
+this, each cheap, and apply them to genomic and protein language models. Each
+control is stated against a precondition --- a known map, a construct-shared
+label, a manipulable context --- rather than against biology, so each should port
+to any setting meeting it; we demonstrate them only in biology, and say so. The controls are a noise ceiling read off the model's own
 violation of an invariance it should respect, a pair of manipulations that destroy
 the representation map while preserving surface statistics, composition-matched
 context twins, and trivial baselines scored under correlated-unit accounting.
@@ -80,7 +82,10 @@ $A$ encodes $P$ ``at the level of $B$'' must rule out the map itself.
 
 Our contribution is a protocol that rules it out, and a case study where applying
 it changes the conclusion four times. We state the protocol first because it is the
-reusable part.
+part intended to be reused. We have not reused it: every number in this paper comes
+from biological sequence models on one benchmark, and the generality is argued from
+each control's precondition rather than demonstrated across domains.
+Section~\ref{sec:future} says what that leaves open.
 
 \paragraph{Contributions.}
 \begin{enumerate}\itemsep0pt
@@ -221,10 +226,17 @@ our 25 assays constitute 21. Statistics are computed over clusters.
 \paragraph{Assays.} Every ProteinGym assay for which a native coding sequence could
 be verified, where verification requires that some ENA coding sequence for the
 assay's UniProt accession translate to a protein containing the assayed target
-exactly. After removing targets longer than 420 aa or with fewer than 200 usable
-single mutants, 25 assays across 9 organisms remain: human, yeast,
-\textit{E.\ coli}, \textit{B.\ subtilis}, \textit{P.\ aeruginosa},
+exactly. This yields 29 assays. After removing targets longer than 420 aa or with
+fewer than 200 usable single mutants, 25 assays across 9 organisms remain: human,
+yeast, \textit{E.\ coli}, \textit{B.\ subtilis}, \textit{P.\ aeruginosa},
 \textit{K.\ pneumoniae}, \textit{S.\ acidocaldarius}, SARS-CoV-2 and HIV-1.
+
+Only the length cap binds. It removes four assays, at 490, 490, 498 and 498~aa;
+the longest target it keeps is 413~aa, so every threshold in $[414, 489]$ selects
+the identical panel and the stated value of 420 is not a tuned quantity. The
+200-mutant filter removes nothing at all: the smallest surviving assay already
+exceeds it. We report both filters because both were declared, not because both
+act.
 
 \paragraph{Scoring.} Identical masked-marginal protocol on both modalities, on the
 same region: the assayed target sequence for protein models, and the coding
@@ -235,6 +247,55 @@ is autoregressive and is scored by summed token log-likelihood.
 500M; HyenaDNA; Evo~2 7B. Genomic model code requires
 \texttt{transformers==4.44.2}, since version 5 removes attributes the Nucleotide
 Transformer's bundled remote code reads.
+
+\paragraph{Constants, and how they were set.} Table~\ref{tab:hyper} lists every
+free quantity in the protocol. None was selected by inspecting the outcome it
+governs: each was fixed before the contrast it enters was run, and none was
+revised afterwards. We state this because the protocol's claim is about validity,
+and a validity protocol whose own thresholds were tuned against its results would
+be self-defeating.
+
+\begin{table}[t]
+\centering\small
+\caption{Every constant in the protocol, its value, and how it was fixed. The
+statistical constants are determined by the stated error rate or by convention
+and admit no choice; the inclusion filters are the only ones that could have been
+tuned, and the panel is insensitive to both.}
+\label{tab:hyper}
+\begin{tabular}{@{}llp{3.1cm}@{}}
+\toprule
+constant & value & how fixed \\
+\midrule
+target length cap & 420 aa & any value in $[414,489]$ gives the same panel \\
+min.\ usable singles & 200 & non-binding; Spearman SE $\le 1/\sqrt{197}=0.071$ \\
+identity threshold & $30\%$ & conventional twilight-zone boundary \\
+min.\ aligned columns & 50 & shorter windows reach $31\%$ by chance \\
+coverage minimum & $0.50$ & rejects identity over a fragment \\
+permutation resamples & 20{,}000 & resampling error $<0.004$ at $p=0.08$ \\
+bootstrap resamples & 20{,}000 & matched to the permutation count \\
+power constant $z$ & $2.801582$ & $80\%$ power, two-sided $\alpha=0.05$ \\
+RNG seed & 0 & single declared value; see below \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Determinism.} Model scoring is deterministic: masked-marginal and
+autoregressive log-likelihoods under fixed weights involve no sampling, so a
+re-run reproduces each $\rho$ exactly and a seed sweep over scoring would measure
+nothing. The seed enters only the resampling tests, where $20{,}000$ draws leave a
+Monte-Carlo error on a $p$ near $0.08$ below $0.004$ --- smaller than the
+rounding we report it to. We verified the determinism claim rather than assuming
+it: re-running the ESM-2 650M arm on different hardware, a different PyTorch
+version and an independently installed dependency set reproduced all 50 published
+per-assay values to a maximum absolute difference of $4\times10^{-6}$.
+
+\paragraph{Hardware and runtime.} The Nucleotide Transformer arms, including the
+2.5B pair, ran on one A100-SXM4-80GB per arm; the 2.5B contrast is the most
+expensive in the paper at two arms of 25 assays each. Evo~2 ran once on an NVIDIA
+L40S host (\texttt{evo2} 0.6.0). Section~\ref{sec:cost} gives the cost of each
+control in model evaluations, which is the portable unit; wall-clock on this
+hardware never exceeded a few hours per arm, and no result in the paper requires
+more than a single 80GB GPU.
 
 \section{Results}
 
@@ -556,6 +617,7 @@ protein-fitness signal'' held for the Nucleotide Transformer family and was writ
 as though it held for genomic models. Evo~2 refutes it.
 
 \section{What the Protocol Costs}
+\label{sec:cost}
 
 Adoption is cheap, which is the argument for it.
 
@@ -575,7 +637,34 @@ has no compute excuse.
 \section{Limitations}
 \label{sec:future}
 
-Evo~2 numbers come from a single run on one GPU host and describe \texttt{evo2\_7b},
+\paragraph{One benchmark.} Every measurement here is on ProteinGym, and the
+25-assay panel is a subset of it chosen by coding-sequence verifiability rather
+than at random. The controls are therefore demonstrated on one dataset. Two
+consequences are worth separating. The \emph{negative} results are the more
+robust of the two, because a control that removes a signal on this panel would
+have to be rescued by another panel to be wrong, and we report the attenuation
+ceiling that rules out the panel being too noisy to read. The \emph{null} results
+are the more fragile: a non-detection is a statement about this panel's power, and
+we report the minimum detectable effect with every one rather than calling it
+equivalence. What one benchmark cannot establish is that the effect sizes
+transfer. A different panel --- different proteins, different assay types,
+different depth --- could move every number in Section~\ref{sec:scale} while
+leaving the protocol's verdicts intact, and nothing here tests that.
+
+\paragraph{Generality is argued, not shown.} The claim that these controls port
+outside biology rests on each one's precondition being statable without reference
+to biology, not on any non-biological experiment. Biology is the easy case in a
+specific way: the map from DNA to protein is known exactly and is the same
+everywhere, so the map-destroying control is exactly constructible. In a setting
+where the map is approximate or learned --- an image--caption encoder, a
+code--language model --- destroying it is itself a modelling problem, and a
+manipulation that is only approximately map-destroying may leave exactly the
+leakage it was built to detect. We expect the ceiling and the trivial-baseline
+controls to port most readily, since both need only a construct-shared label set,
+and the map control to port least readily. Testing that ordering is future work we
+have not done.
+
+\paragraph{Models and runs.} Evo~2 numbers come from a single run on one GPU host and describe \texttt{evo2\_7b},
 since \texttt{evo2\_1b\_base} requires Transformer Engine. We have one genomic
 architecture off the Nucleotide Transformer scaling line and therefore cannot
 separate architecture from corpus from token budget.
@@ -615,10 +704,12 @@ larger ones. The specificity arm rests on one combinatorially complete landscape
 
 \section{Conclusion}
 
-The controls in this paper are not specific to biology. Any claim that a
+Nothing in the controls' statement is specific to biology. Any claim that a
 representation encodes a property of another modality related to it by a known map
-can be checked by destroying the map, by bounding attenuation from within-fibre
-variance, and by matching a context manipulation on composition. Biology is the
+can in principle be checked by destroying the map, by bounding attenuation from
+within-fibre variance, and by matching a context manipulation on composition ---
+in principle, because we have tested this in one domain, and the hard step outside
+it is constructing a map-destroying manipulation when the map is not exact. Biology is the
 setting where the map is known exactly, which makes it the setting where the
 controls are exactly constructible and where their consequences can be seen most
 clearly. In this setting they removed four claims, three of them ours, and left a
