@@ -23,43 +23,27 @@ A Validity Protocol for Cross-Representation Claims in Biological Sequence Model
 \printAffiliationsAndNotice{}
 
 \begin{abstract}
-DNA and protein are two encodings of one molecule related by a map that is exactly
-known. This makes biological sequence models an unusually sharp setting for a
-question the rest of machine learning can only ask loosely: when a model trained
-on one representation appears to know something about another, is that transfer,
-or an artifact of how the question was posed? We give four controls that decide
-this, each cheap, and apply them to genomic and protein language models. Each
-control is stated against a precondition --- a known map, a construct-shared
-label, a manipulable context --- rather than against biology, so each should port
-to any setting meeting it; we demonstrate them only in biology, and say so. The controls are a noise ceiling read off the model's own
-violation of an invariance it should respect, a pair of manipulations that destroy
-the representation map while preserving surface statistics, composition-matched
-context twins, and trivial baselines scored under correlated-unit accounting.
-Applying them overturns four published or prior claims, three of them our own. A
-genomic representation that scored $\rho=+0.141$ on held-out residues, read as
-weak transfer, scores $+0.143$ after its reading frame is destroyed and $+0.129$ on
-the reverse complement. A context dose-response is reproduced in both directions by
-flanks carrying no genomic information. Across 25 deep mutational scanning assays
-in 9 organisms, the surviving picture is that genomic-to-protein transfer is a
-property of architecture and corpus and not of scale: no Nucleotide Transformer
-size carries protein-fitness signal, the four means running from $-0.013$ to
-$+0.008$ with every interval containing zero; Evo~2 7B reaches $+0.266$ but does
-not separate from BLOSUM62 at $+0.228$, a non-rejection at a minimum detectable
-effect of $37\%$ of the baseline's own score rather than a demonstration of
-equivalence; and granting that family the monotone trend its four points trace,
-which is not itself significant, extrapolation to 7B still falls short of Evo~2
-by a factor of 9.5. Released checkpoints let us separate three candidate
-explanations at matched architecture: codon-aligned tokenization, a thousandfold
-increase in within-species corpus diversity, and cross-species corpus breadth
-spanning 850 species each leave the result short of the bar, with paired
-differences, each stated as the richer option minus its baseline, of $-0.016$,
-$-0.005$ and $+0.032$. The first two contain zero under any estimator we tried; the
-third is the one contrast in the paper whose verdict depends on the interval used,
-excluding zero by $0.0011$ under a percentile bootstrap and containing it under a
-$t$ interval with a permutation test at $p=0.079$, on a panel that could not have
-detected an effect below $0.057$. We report that disagreement rather than resolving
-it in our favour, and we report the cost of each control in model evaluations so
-that the protocol can be adopted without a compute argument.
+DNA and protein are two encodings of one molecule related by an exactly known
+map. This makes biological sequence models a sharp setting for a question the
+rest of machine learning can only ask loosely: when a model trained on one
+representation appears to know something about another, is that transfer, or an
+artifact of how the question was posed? We give four controls that decide it ---
+a noise ceiling read off the model's own violation of an invariance it should
+respect, manipulations that destroy the representation map while preserving
+surface statistics, composition-matched context twins, and trivial baselines
+under correlated-unit accounting. Each is stated against a precondition rather
+than against biology, though we demonstrate them only in biology. Applying them
+overturns four claims, three of them our own: a genomic representation read as
+weak transfer at $\rho=+0.141$ scores $+0.143$ once its reading frame is
+destroyed, and a context dose-response is reproduced by flanks carrying no
+genomic information. Across 25 deep mutational scanning assays in 9 organisms no
+Nucleotide Transformer size carries protein-fitness signal, and Evo~2 7B reaches
+$+0.266$ but does not separate from BLOSUM62 at $+0.228$. Three explanations
+separable from released checkpoints at matched architecture --- codon-aligned
+tokenization, within-species corpus diversity, and corpus breadth over 850
+species --- each leave the result short of that bar. On the third our two
+interval estimators disagree, one excluding zero by $0.0011$ and one not, and we
+report the disagreement rather than choosing the convenient side of it.
 \end{abstract}
 
 \section{Introduction}
@@ -539,63 +523,6 @@ named breadth as the contrast whose outcome would change our recommendation. Had
 read only the bootstrap column, we would now be reporting that it showed a gradient
 and reopening a compute argument on the strength of $0.0011$.
 
-We note one further sampling lesson from the runs themselves. At 14 of the 25 assays
-the tokenizer difference read $-0.0302$ with an interval excluding zero, and that did
-not survive the remaining eleven. These intervals are wide at small $n$ and a partial
-sweep is not a result --- which is the same lesson the breadth bootstrap teaches at
-full $n$, one estimator removed.
-
-\subsection{Genomic models on their own task}
-
-Grading genomic models on coding sequence and protein fitness is grading them on a
-task they were not built for. On five Nucleotide Transformer benchmark tasks under
-a homology-clustered split, with frozen embeddings and a linear probe, the trivial
-competitor wins outright twice and loses twice by under $0.03$ AUC. A positional
-one-hot reaches $0.959$ on splice sites against the Nucleotide Transformer's
-$0.756$ and HyenaDNA's $0.704$, a loss of $0.203$ and $0.254$. The one-hot
-competitor is selected on test, so the baseline is given an oracle the model is
-not, and still wins.
-
-Concurrent work reaches this result independently and in a stronger form.
-\citet{cheng2026invariance} evaluate five genomic models, including Evo2-1B, on a
-650-sequence benchmark with scrambled controls, and report universal
-strand-blindness and a 100-parameter position-aware PWM at perfect performance
-where billion-parameter models fail; they further find that larger models show
-\emph{stronger} compositional bias, so scale amplifies the failure rather than
-correcting it. Their benchmark is purpose-built and better powered than our
-five-task probe. We therefore present this subsection as a corroborated side
-result rather than a contribution, and note that it is the arm of this work that
-claims least: the protocol and the zero-shot transfer measurement are where our
-contribution sits.
-
-\section{Reconciling Fine-Tuned and Zero-Shot Results}
-\label{sec:tension}
-
-\citet{boshar2024glm} report Nucleotide Transformer v2 500M matching or beating
-ESM-2 on three of five protein tasks. We report the same family at $\rho=-0.013$
-against ESM-2's $+0.465$. Both can hold, and the protocol says why.
-
-Fine-tuning fits a readout on top of the representation. Section~\ref{sec:map}
-shows that the genomic representation carries residue identity through the codon,
-and that this survives frameshifting and reverse-complementing. A supervised head
-is free to use that channel, so strong fine-tuned performance on a protein task is
-evidence that residue identity is recoverable and not that the model represents
-protein-level structure. A zero-shot likelihood has no fitted head and therefore no
-access to the channel, which is why the same model scores at chance.
-
-This makes the two measurements complementary and gives a testable prediction: a
-model whose fine-tuned protein performance comes from the codon channel should show
-that performance survive a frameshift of its input. We did not run this and regard
-it as the sharpest available test of the account, since it requires only re-running
-an existing fine-tuning pipeline on frameshifted sequences.
-
-A codon-aligned tokenization is the natural place to look for a genuine effect, and
-one exists at matched architecture: \texttt{nucleotide-transformer-v2-50m-3mer-}
-\texttt{multi-species} differs from its 6-mer counterpart only in vocabulary size,
-75 against 4107, with identical depth, width, head count and training corpus. We
-report it zero-shot in Table~\ref{tab:free} as the one architectural change prior
-work identified as promising for protein tasks.
-
 \section{Four Claims the Protocol Overturned}
 \label{sec:retract}
 
@@ -705,39 +632,98 @@ larger ones. The specificity arm rests on one combinatorially complete landscape
 \section{Conclusion}
 
 Nothing in the controls' statement is specific to biology. Any claim that a
-representation encodes a property of another modality related to it by a known map
-can in principle be checked by destroying the map, by bounding attenuation from
-within-fibre variance, and by matching a context manipulation on composition ---
-in principle, because we have tested this in one domain, and the hard step outside
-it is constructing a map-destroying manipulation when the map is not exact. Biology is the
-setting where the map is known exactly, which makes it the setting where the
-controls are exactly constructible and where their consequences can be seen most
-clearly. In this setting they removed four claims, three of them ours, and left a
-smaller result standing: genomic-to-protein transfer exists at Evo~2 scale and does
-not clear a substitution matrix. Three factors that might have explained it ---
-codon-aligned tokenization, within-species corpus diversity and cross-species corpus
-breadth --- do not, and we established all three from released checkpoints without
-training anything.
+representation encodes a property of another modality related to it by a known
+map can in principle be checked by destroying the map, by bounding attenuation
+from within-fibre variance, and by matching a context manipulation on
+composition --- in principle, because we have tested this in one domain, and the
+hard step outside it is constructing a map-destroying manipulation when the map
+is not exact. Biology is where the map is known exactly, which makes it the
+setting where the controls are exactly constructible and their consequences
+visible. Here they removed four claims, three of them ours, and left a smaller
+result standing: genomic-to-protein transfer exists at Evo~2 scale and does not
+clear a substitution matrix, and the three factors we can vary at matched
+architecture do not explain it.
 
 A reviewer entitled to ask what would change our mind had a short answer in an
-earlier version of this paper: cross-species corpus breadth, at a cost of one
+earlier version of this paper: cross-species corpus breadth, at the cost of one
 download. We ran it, and it did not change our mind, which is the outcome we had
-committed in advance to reporting either way. The answer is now longer and less
-comfortable. The token budget would change our mind and no number of released
-checkpoints can supply it, so the question is closed to studies of frozen models and
-open only to a pretrained ladder we argue against funding. Within what is reachable,
-the honest statement is that every factor we can vary at matched architecture leaves
-genomic-to-protein transfer below a substitution matrix, and that the one factor we
-cannot vary is the one a future result would have to move.
+committed in advance to reporting either way. The answer is now longer. The
+token budget would change our mind, and no number of released checkpoints can
+supply it.
 
-We would add that the most interesting thing we learned from the breadth contrast was
-not its value. It was that two standard interval estimators disagreed on it, one
-excluding zero by $0.0011$ and one not, and that the protocol in this paper is what
-made the disagreement visible rather than decisive. A paper about measurement
-validity should be able to report that its own last experiment came within $0.0011$
-of a different conclusion.
+The most interesting thing we learned from that last contrast was not its value.
+It was that two standard interval estimators disagreed on it, one excluding zero
+by $0.0011$ and one not, and that the protocol here is what made the
+disagreement visible rather than decisive. A paper about measurement validity
+should be able to report that its own last experiment came within $0.0011$ of a
+different conclusion.
 
 \bibliographystyle{icml2027}
 \bibliography{refs}
+
+\clearpage
+\appendix
+
+\section{Genomic Models on Their Own Benchmark Tasks}
+\label{app:owntask}
+Grading genomic models on coding sequence and protein fitness is grading them on a
+task they were not built for. On five Nucleotide Transformer benchmark tasks under
+a homology-clustered split, with frozen embeddings and a linear probe, the trivial
+competitor wins outright twice and loses twice by under $0.03$ AUC. A positional
+one-hot reaches $0.959$ on splice sites against the Nucleotide Transformer's
+$0.756$ and HyenaDNA's $0.704$, a loss of $0.203$ and $0.254$. The one-hot
+competitor is selected on test, so the baseline is given an oracle the model is
+not, and still wins.
+
+Concurrent work reaches this result independently and in a stronger form.
+\citet{cheng2026invariance} evaluate five genomic models, including Evo2-1B, on a
+650-sequence benchmark with scrambled controls, and report universal
+strand-blindness and a 100-parameter position-aware PWM at perfect performance
+where billion-parameter models fail; they further find that larger models show
+\emph{stronger} compositional bias, so scale amplifies the failure rather than
+correcting it. Their benchmark is purpose-built and better powered than our
+five-task probe. We therefore present this subsection as a corroborated side
+result rather than a contribution, and note that it is the arm of this work that
+claims least: the protocol and the zero-shot transfer measurement are where our
+contribution sits.
+
+
+\section{Reconciling Fine-Tuned and Zero-Shot Results}
+\label{sec:tension}
+\citet{boshar2024glm} report Nucleotide Transformer v2 500M matching or beating
+ESM-2 on three of five protein tasks. We report the same family at $\rho=-0.013$
+against ESM-2's $+0.465$. Both can hold, and the protocol says why.
+
+Fine-tuning fits a readout on top of the representation. Section~\ref{sec:map}
+shows that the genomic representation carries residue identity through the codon,
+and that this survives frameshifting and reverse-complementing. A supervised head
+is free to use that channel, so strong fine-tuned performance on a protein task is
+evidence that residue identity is recoverable and not that the model represents
+protein-level structure. A zero-shot likelihood has no fitted head and therefore no
+access to the channel, which is why the same model scores at chance.
+
+This makes the two measurements complementary and gives a testable prediction: a
+model whose fine-tuned protein performance comes from the codon channel should show
+that performance survive a frameshift of its input. We did not run this and regard
+it as the sharpest available test of the account, since it requires only re-running
+an existing fine-tuning pipeline on frameshifted sequences.
+
+A codon-aligned tokenization is the natural place to look for a genuine effect, and
+one exists at matched architecture: \texttt{nucleotide-transformer-v2-50m-3mer-}
+\texttt{multi-species} differs from its 6-mer counterpart only in vocabulary size,
+75 against 4107, with identical depth, width, head count and training corpus. We
+report it zero-shot in Table~\ref{tab:free} as the one architectural change prior
+work identified as promising for protein tasks.
+
+
+\section{Interval Width at Partial Sample Size}
+\label{app:sweep}
+We note one further sampling lesson from the runs themselves. At 14 of the 25 assays
+the tokenizer difference read $-0.0302$ with an interval excluding zero, and that did
+not survive the remaining eleven. These intervals are wide at small $n$ and a partial
+sweep is not a result --- which is the same lesson the breadth bootstrap teaches at
+full $n$, one estimator removed.
+
+
 
 \end{document}
