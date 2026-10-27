@@ -127,32 +127,42 @@ models substitutes.
 
 ## Staging, so the project can fail cheaply
 
-**Stage 0, RUN 4 Oct 2026. Two of three axes null; the gate is not passed.**
+**Stage 0, COMPLETE 26 Oct 2026. All three axes null; the gate is not passed and
+the ladder is closed.**
 
 | axis | contrast | paired difference | verdict |
 |---|---|---|---|
 | tokenization | NT-v2 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
 | corpus diversity | NT 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
-| corpus breadth | NT 2.5B 1000G vs multi-species | not run | **open** |
+| corpus breadth | NT 2.5B multi-species minus 1000G | +0.0395 [-0.0032, +0.0821] | flat |
 
-All four models land 0.225 to 0.257 below BLOSUM62 with attenuation ceilings of
-0.866 to 0.901, so none of these is a power failure. The 2.5B pair needs ~20 GB of
-free disk and the machine had 138 MB. As of 9 Oct 2026 that is no longer
-true: 25 GB is free and the pair is runnable without deleting anything, so the
-axis is open on host load rather than on space.
+Every contrast is cluster level over 21 clusters. All six models land 0.190 to 0.257
+below BLOSUM62, so none of these is a power failure: attenuation ceilings run 0.846
+to 0.901, with one cell excepted -- `AMIE_PSEAE_Wrenbeck_2017` under 2.5B
+multi-species returns a ceiling of 0.0000 and is reported as uninformative rather
+than null. Dropping it moves breadth to +0.0397 and changes nothing. Section 46 has
+the full arm, including the disagreement between the percentile bootstrap in
+`analyze_stage0.py`, which reads this contrast as excluding zero by 0.0011, and
+`validity.paired_contrast`, whose t interval and permutation p contain zero and
+which governs.
 
-**The gate as written said to make the case explicitly before proceeding, so here
-it is: do not fund the ladder yet.** Two of the three factors separable without
-training are flat. If breadth is flat too, every reachable axis is null and the
-entire argument for 8,000 A100-hours rests on the token budget alone. That is a
-single unmeasured axis carrying a five-figure compute request, and the honest move
-is to stop at the measurement-validity paper, which is now stronger for carrying
-three controlled negative contrasts.
+**The gate said to make the case explicitly before proceeding, so here it is: do not
+fund the ladder.** This is no longer a projection. All three factors separable
+without training are flat, so the entire argument for 8,000 A100-hours rests on the
+token budget alone -- a single unmeasured axis carrying a five-figure compute
+request. The honest move is to stop at the measurement-validity paper, which is
+stronger for carrying three controlled negative contrasts than it would be for
+carrying a trained ladder that found the same thing.
 
-**Run breadth first.** It costs one download and it is the most informative of the
-three, since Evo 2 trains across all domains of life and cross-species range is the
-most plausible surviving account of its margin. A gradient there reopens the ladder;
-a flat result closes it. No decision on the GPU spend should be made before it.
+Breadth was the axis most likely to reopen it, since Evo 2 trains across all domains
+of life and cross-species range was the most plausible surviving account of its
+margin. It came back flat, which is the result that closes this.
+
+The one honest reservation: breadth is the largest of the three contrasts and the
+closest to significance, and the panel could not have detected an effect below
+0.0573. It is a non-detection, not a demonstration of equivalence, and a larger
+panel could resolve it. But at +0.0395 against a 0.19 gap to the bar, resolving it
+would not move the headline.
 
 **Stage 1, ~400 A100-hours.** The 14M and 44M rows only, all corpora, D=2B and 8B.
 If no cell clears G2 and the corpus axis shows no gradient, the modal outcome is

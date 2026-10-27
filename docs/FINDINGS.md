@@ -1964,3 +1964,140 @@ than concatenation is the cause.
   Nucleotide Transformer tokenize differently, and section 39 found the tokenization
   axis flat, but these exponents are measured on single bases and a 6-mer
   tokenization would have to be measured separately.
+
+## 46. Corpus breadth is flat too, and Stage 0 closes the ladder
+
+26 Oct 2026. `scripts/run_dms_transfer.py`, two arms, `results/stage0_corpus2500m.csv`.
+Run on ml7 (A100-SXM4-80GB, one arm per GPU) because the local machine could not
+hold it; see the provenance note at the end.
+
+### What was run
+
+The one Stage 0 axis that had never been run. NT 2.5B `1000g` against NT 2.5B
+`multi-species`: identical 2560 hidden, 32 layers, 20 heads, differing only in
+corpus, one human (1000 Genomes) and one spanning 850 species. The paper's protocol
+unchanged -- 25 DMS assays, masked-marginal on the coding sequence, `--context cds`,
+BLOSUM62 at +0.2282 as the bar.
+
+Both arms fp32, no `torch_dtype`, matching the banked 50M and 500M arms. Changing
+dtype on one arm of a matched-architecture contrast would introduce exactly the
+confound this project exists to detect.
+
+### G1 first, because one cell fails it
+
+| arm | cells below ceiling 0.80 | mean ceiling |
+|---|---|---|
+| 2.5B 1000G | 0 of 25 | 0.888 |
+| 2.5B multi-species | **1 of 25** | 0.846 |
+
+`AMIE_PSEAE_Wrenbeck_2017` under multi-species returns a ceiling of **0.0000**:
+`syn_within_sd` 1.517 against `nt_between_sd` 1.511, so the synonymous spread
+swamps the between-variant spread entirely. That cell is **uninformative, not
+null**, and is reported as such. Dropping it moves the contrast from +0.0395 to
++0.0397 and the conclusion not at all, so the headline keeps all 25 and the
+exclusion is recorded here rather than applied silently.
+
+### The contrast, at both unit levels
+
+multi-species minus 1000G, via `validity.paired_contrast`:
+
+| field | unit | n | difference | 95% CI | p | positive |
+|---|---|---|---|---|---|---|
+| `rho_nt` | assay | 25 | +0.0322 | [-0.0044, +0.0689] | 0.0786 | 16/25 |
+| `rho_nt` | cluster | 21 | +0.0395 | [-0.0032, +0.0821] | 0.0657 | 14/21 |
+| codon-marginalised | cluster | 21 | +0.0426 | [-0.0009, +0.0861] | 0.0512 | 14/21 |
+
+Contains zero at both unit levels. The cluster-level test **could not have caught
+an effect below 0.0573**, and equivalence holds only out to a margin of 0.0735. So
+this is a non-detection on an underpowered panel, not a demonstration that breadth
+buys nothing.
+
+### The two estimators disagree at the margin, and which one governs
+
+`scripts/analyze_stage0.py` bootstraps percentile intervals over assays and reports
+this same contrast as **-0.0322 [-0.0679, -0.0011], "excludes zero"** (the sign is
+the subtraction direction). `validity.paired_contrast` returns the identical point
+estimate with a t interval and a sign-flip permutation p, and **contains zero**.
+
+The t interval with the permutation p is this project's instrument -- it is what
+`validity.py` implements and what section 41 reports at both unit levels -- and it
+governs. A percentile bootstrap at n=25 whose bound sits 0.0011 from zero is not
+evidence of a gradient. Recorded because had `analyze_stage0.py` been read alone,
+this would have entered the record as breadth showing a gradient and reopening the
+ladder, which is a five-figure compute decision resting on 0.0011.
+
+### Neither arm clears the bar
+
+Cluster level, against BLOSUM62 at +0.2282:
+
+| arm | difference | 95% CI | p |
+|---|---|---|---|
+| 2.5B multi-species | -0.1903 | [-0.2369, -0.1436] | 0.0000 |
+| 2.5B 1000G | -0.2298 | [-0.2531, -0.2064] | 0.0000 |
+
+G2 fails for both, by a wide margin. The NT family's null now holds at 2.5B, the
+top of the family, where previously it was measured to 500M.
+
+### Stage 0, complete
+
+| axis | contrast | paired difference | verdict |
+|---|---|---|---|
+| tokenization | NT-v2 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
+| corpus diversity | NT 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
+| corpus breadth | NT 2.5B multi-species minus 1000G | +0.0395 [-0.0032, +0.0821] | flat |
+
+**All three axes separable without training are null, so the ladder is closed on its
+own pre-registered gate.** `paper/DESIGN.md` said that if breadth were flat the
+entire argument for roughly 8,000 A100-hours would rest on the token budget alone,
+and that the honest move would be to stop at the measurement-validity paper. That is
+now the situation, and that is the decision.
+
+Stated against itself: breadth is the largest of the three contrasts and the closest
+to significance, at p 0.0657 raw and 0.0512 codon-marginalised, and the observed
++0.0395 sits below the 0.0573 the panel could have detected. A larger panel could
+resolve it. But even taken at face value it is 17% of BLOSUM62's own score against a
+gap to the bar of 0.19, so it would not move the headline -- it would make corpus
+breadth a small real effect inside a cell that still carries no transfer.
+
+### Provenance, because the run moved machines
+
+The local machine was measurably infeasible: 9.492 GiB needed per arm against 9.636
+GiB free, 14 GB of swapfiles on the same APFS container, and roughly 13 GB of cache
+eviction absorbed entirely by swap growth rather than appearing as free space. A
+restart cleared the swap and the axis still would not fit both arms, so it moved to
+ml7, where both arms ran in parallel on separate A100s.
+
+The transplant is validated by the arm the runner loads every time: **ESM-2 650M
+reproduces the published per-assay `rho_esm` to a maximum absolute difference of
+0.000004 across all 50 rows, with exact mutant counts on 25 of 25.** Different
+machine, torch 2.7.0, numpy 1.21.5, and `transformers==4.44.2` installed to a
+separate directory rather than a venv, since ml7 has no `python3-venv` and its user
+site carries transformers 5.20.1 which the pin would have downgraded.
+
+ProteinGym: the checkout used has an 86-row `reference.csv`, which by the README's
+own criterion is the v0.1 index rather than v1. It is a smaller *index* of the same
+assays -- all 25 present, exact `n` on 25 of 25, and the ESM-2 agreement above -- so
+the release label does not bear on this panel. What does bear on it is numbering: a
+different assay count is a `target_seq[pos-1] != wt` numbering problem, which
+`load_singles` drops silently, and that is the first thing to check rather than the
+model.
+
+Multiplicity: the declared family goes from 8 to 9 contrasts and the Bonferroni
+threshold from 0.00625 to 0.00556. No existing contrast has a p in that window --
+the significant ones are at or below 0.00005 and the nearest non-significant is
+0.147 -- so nothing flips.
+
+### Two traps where a tool returned less than it was asked for
+
+The result log truncates assay names at 30 characters, which made
+`DYR_ECOLI_Thompson_plusLon_2019` appear absent from the published panel when it is
+in it. That is the sibling of section 40's `find -newermt` exiting 0 with empty
+output under this machine's `bfs`. Both present as a clean negative and both are the
+tool silently returning less than asked, with the absence reading as evidence.
+
+Separately, `run_dms_transfer.py` line 215 opens `--out` with `open("w")`. It
+overwrites and does not append, so section 40's stated plan to append both arms to
+one file would have destroyed arm 1 when arm 2 ran, leaving a one-model file and a
+contrast that cannot be computed, with no warning. Each arm was given its own
+`--out` and the two were concatenated afterwards, which is safe because
+`analyze_stage0.py` keys on `nt_model` rather than on scoring order.
