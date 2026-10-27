@@ -213,9 +213,16 @@ the existing tables. The `t` and mask-rate sweeps multiply the diffusion cells b
 the number of swept values and nothing else.
 
 Call it a day of GPU time and a few gigabytes of download, against the ladder's
-8,000 A100-hours. **This arm should be run before the ladder is funded regardless of
-what the corpus-breadth axis returns**, because it tests a different axis of the
-paper's generality and it is three orders of magnitude cheaper.
+8,000 A100-hours.
+
+**Updated 26 Oct 2026: the ladder is closed.** Section 46 ran the corpus-breadth
+axis and it came back flat, which makes all three axes separable without training
+null and settles the funding question on DESIGN.md's own pre-registered gate. That
+changes this arm's standing rather than its design: it is no longer the cheaper thing
+to do before a five-figure compute decision, it is **the only open axis of the
+paper's generality left**. The paper's claim rests on one family of training
+objective, and whether it survives a denoising objective is now the question that
+has not been asked rather than one of two.
 
 ## Stage 0, to be run before any scoring
 
@@ -255,28 +262,33 @@ sequence** and proposes no sequence, which is why it raises none of what follows
 D3LM and DPLM generate sequence itself. The distinction is between the two, not
 between this arm and a repository that had never loaded a generative model.
 
-The posture below is a boundary, not a preference. It is the posture of
-`RESEARCH/HARNESS.md`, applied here, and the full version is now in
-`biologos/SAFETY.md`, drafted 15 Oct 2026 against HARNESS.md B1 to B7 after the
-gate found the repository had none while eight sibling projects did.
+The rule this arm runs under, which is the rule every other section of this
+repository already satisfies by construction:
 
-**That file is not yet in force.** Its advisor and disclosure-date fields are
-unfilled, so HARNESS.md B7 is unmet, and it says in its own words that **no DPLM or
-D3LM checkpoint is downloaded until they are filled**. Stage 0 step 1 of this
-document is blocked behind it. `SAFETY.md` governs; what follows is the summary for
-a reader of this design.
+**Score sequences that already exist. Do not use a model to produce sequences that
+do not.**
+
+Concretely, for this arm:
 
 - **Likelihood evaluation only.** Masked marginals at fixed positions in sequences
   that already exist. No sampling, no denoising to completion, no conditional
   generation, no infilling.
-- **No optimisation loop.** Nothing in this arm ranks, searches or proposes
-  sequences. The outputs are per-assay correlations and the control tables, which is
-  what every other section of this repository produces.
-- **No new sequence data.** The inputs are ProteinGym v1 and the verified coding
-  sequences already in `data/cds/`, each accepted only on exact translation. This
-  arm adds checkpoints, not organisms and not sequences.
-- **No per-sequence artifacts released.** Results are aggregate correlations,
-  intervals and ceilings.
+- **No optimisation toward a fitness objective**, and no fine-tuning on assay
+  labels. A model fitted to a landscape and then used to rank unmeasured variants is
+  a design tool, not a measurement.
+- **No new sequence data.** The inputs are the ProteinGym panel and the verified
+  coding sequences in `data/cds/`, admitted only on exact translation. This arm adds
+  checkpoints, not organisms and not sequences.
+- **Aggregate outputs only**: per-assay correlations, intervals, ceilings and the
+  control tables, which is what every other section produces.
+
+One qualification, because the unqualified version would be false.
+`biologos/landscape.py` is a data loader and a noise model, and its docstring points
+at `crosstalk.solve`, which computes exact regret. So no search runs *in this
+repository*, but the module does feed one next door, over a fully enumerated
+three-site landscape whose fitness values are published measurements. Saying "this
+project contains no optimisation over sequences" without that qualification would
+misdescribe the tree.
 
 The failure mode to name in advance, because it will be proposed as a natural
 extension: a cell that clears G2 invites sampling from that checkpoint to see what
@@ -286,25 +298,33 @@ answerable entirely by scoring existing sequences, and that is the reason it is
 worth running in this form.** If a result here makes generation look informative,
 the correct response is to write down why and stop, not to generate.
 
-**Gate outcome, 15 Oct 2026.** This plan was put to the biosafety gate before any
-checkpoint was downloaded. The gate **declined to rule**, which is not a pass and
-not a fail. Two of the questions put to it asked whether the boundary above would
-hold against the code paths these checkpoints make available, and for an
-enumeration of the unrefused extensions this plan invites. The gate's position was
-that answering those in writing produces a map from a declared
-likelihood-evaluation-only posture to generation from a regulatory-DNA design
-model, that such a document fails HARNESS.md B3 -- delete every result, keep only
-the artifact, ask whether the artifact alone lowers the cost of misuse -- and that
-a gate which writes a bypass map has become the hazard it screens for. That
-reasoning is accepted here and the enumeration has not been produced, by the gate
-or anywhere else in this repository.
+**On the review question, settled 26 Oct 2026.** An earlier version of this section
+deferred to a `biologos/SAFETY.md` written against HARNESS.md B1 to B7, and blocked
+this arm behind a faculty-advisor disclosure that gate B7 requires. That file has
+been deleted and the block lifted, for a reason worth recording so it is not
+reintroduced: **HARNESS.md's B-gates are scoped to safeguard auditing.** That
+supplement opens by saying every gate above it assumes you can hold the positive
+class and that in biosecurity you cannot -- the problem of probing a screener when
+the material defining a correct flag is material you must not acquire. `shibboleth`
+has that problem and its protocol is its method. This project has no positive class:
+it scores public, published assay data and its outputs are correlations. The tell was
+that B1's own input categories had to be rewritten to apply here at all, which is
+evidence a gate does not fit rather than licence to redefine it.
 
-The consequence for this arm is procedural, not scientific. **The two questions are
-for the faculty advisor, in conversation, where a bypass analysis can be held
-without becoming a transferable document.** The sequence is: write
-`biologos/SAFETY.md`; disclose this arm to the advisor and put those two questions
-to them directly; then return to the gate for a ruling on a specific narrow
-question if one remains. No checkpoint is downloaded before that.
+There is also no faculty advisor on this project, so B7 could not have been met as
+written and the blank it left behind was asserting a review that was never going to
+happen. The author is the only reviewer, and that is stated here rather than
+concealed behind a filled-in field.
+
+What survives from that exercise is the rule above and one correction below. The two
+questions the biosafety gate declined to answer in writing -- whether this boundary
+holds against what the code paths make available once generative weights are local,
+and what unrefused extensions the arm invites -- remain unanswered by anyone. The
+gate's reasoning for refusing was that writing them down produces a map from a
+likelihood-only posture to generation from a regulatory-DNA design model, which
+fails HARNESS.md B3: delete every result, keep the artifact, ask whether the artifact
+alone lowers the cost of misuse. That reasoning is accepted and the enumeration has
+not been produced anywhere in this repository. It is a known gap, not a cleared one.
 
 ## What this does not fix
 
