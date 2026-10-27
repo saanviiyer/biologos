@@ -46,13 +46,18 @@ not separate from BLOSUM62 at $+0.228$, a non-rejection at a minimum detectable
 effect of $37\%$ of the baseline's own score rather than a demonstration of
 equivalence; and granting that family the monotone trend its four points trace,
 which is not itself significant, extrapolation to 7B still falls short of Evo~2
-by a factor of 9.5. Released checkpoints let us separate two candidate
-explanations at matched architecture: codon-aligned tokenization and a
-thousandfold increase in training-corpus diversity each leave the result
-unchanged, with paired differences, each stated as the richer option minus its
-baseline, of $-0.016$ and $-0.005$ that both contain zero. We report
-the cost of each control in model evaluations so that the protocol can be adopted
-without a compute argument.
+by a factor of 9.5. Released checkpoints let us separate three candidate
+explanations at matched architecture: codon-aligned tokenization, a thousandfold
+increase in within-species corpus diversity, and cross-species corpus breadth
+spanning 850 species each leave the result short of the bar, with paired
+differences, each stated as the richer option minus its baseline, of $-0.016$,
+$-0.005$ and $+0.032$. The first two contain zero under any estimator we tried; the
+third is the one contrast in the paper whose verdict depends on the interval used,
+excluding zero by $0.0011$ under a percentile bootstrap and containing it under a
+$t$ interval with a permutation test at $p=0.079$, on a panel that could not have
+detected an effect below $0.057$. We report that disagreement rather than resolving
+it in our favour, and we report the cost of each control in model evaluations so
+that the protocol can be adopted without a compute argument.
 \end{abstract}
 
 \section{Introduction}
@@ -375,8 +380,10 @@ variable we control. Section~\ref{sec:future} says what would.
 
 Section~\ref{sec:scale} rejects the scaling account but cannot say which of
 architecture, corpus or token budget produces Evo~2's signal, because those are
-confounded between the two families. Released checkpoints resolve two of the three
-at matched architecture and inference cost only. We ran both.
+confounded between the two families. Released checkpoints resolve three contrasts at
+matched architecture, for inference cost only. We ran all three. The token budget is
+not among them, and Section~\ref{sec:future} says why no number of released
+checkpoints can supply it.
 
 \paragraph{Codon-aligned tokenization does not help.} The v2 family ships a 3-mer
 variant that is otherwise identical to the 6-mer 50M model: 512 hidden, 12 layers,
@@ -392,11 +399,22 @@ improved their two codon-sensitive tasks. It had not been scored zero-shot.
 and 20 heads, differing only in training on one human reference genome against 3,202
 genetically diverse human genomes.
 
+\paragraph{Cross-species corpus breadth does not help either.} The v1 family also
+supplies \texttt{2.5b-1000g} and \texttt{2.5b-multi-species}, identical at 2560
+hidden, 32 layers and 20 heads, differing in whether the training corpus is human or
+spans 850 species. This is the most informative of the three contrasts, because
+Evo~2 trains across all domains of life and cross-species range was the most
+plausible surviving account of its margin. It is also the contrast on which our own
+conclusion was staked: an earlier version of this paper reported it as unrun and said
+explicitly that a gradient here would change the recommendation in
+Section~\ref{sec:future}.
+
 \begin{table}[t]
 \caption{Contrasts available from released checkpoints, each varying one factor at
 matched architecture. Paired bootstrap over 25 assays, each difference stated as
-the richer option minus its baseline. Every difference contains zero, and every
-model misses the BLOSUM62 bar by about $0.23$.}
+the richer option minus its baseline. No model reaches the BLOSUM62 bar, every one
+missing it by $0.20$ to $0.26$. The first two differences contain zero under either
+estimator; the third is the one that does not, and is treated in the text.}
 \label{tab:free}
 \centering\small
 \begin{tabular}{lcccc}
@@ -408,34 +426,63 @@ model & mean $\rho$ & 95\% CI & $\kappa$ & vs.\ B62 \\
 \quad 3-mer & $-0.0288$ & $[-0.053,-0.003]$ & $0.866$ & $-0.257$ \\
 \multicolumn{5}{l}{\quad paired, 3-mer minus 6-mer: $-0.0156\ [-0.043,+0.012]$, contains zero}\\
 \addlinespace
-\multicolumn{5}{l}{\emph{corpus diversity, 500M}}\\
+\multicolumn{5}{l}{\emph{within-species corpus diversity, 500M}}\\
 \quad human-ref & $+0.0032$ & $[-0.015,+0.021]$ & $0.901$ & $-0.225$ \\
 \quad 1000G & $-0.0022$ & $[-0.024,+0.017]$ & $0.878$ & $-0.230$ \\
 \multicolumn{5}{l}{\quad paired, 1000G minus human-ref: $-0.0054\ [-0.025,+0.013]$, contains zero}\\
+\addlinespace
+\multicolumn{5}{l}{\emph{cross-species corpus breadth, 2.5B}}\\
+\quad 1000G & $-0.0019$ & $[-0.021,+0.016]$ & $0.888$ & $-0.230$ \\
+\quad 850 species & $+0.0303$ & $[-0.002,+0.072]$ & $0.846$ & $-0.198$ \\
+\multicolumn{5}{l}{\quad paired, 850 species minus 1000G: $+0.0322\ [+0.001,+0.068]$}\\
+\multicolumn{5}{l}{\quad same contrast, $t$ interval: $+0.0322\ [-0.004,+0.069]$, $p=0.079$}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:free} reports both. Neither factor moves the result. Codon-aligned
-tokenization, 3-mer minus 6-mer, gives $-0.0156$ $[-0.043,+0.012]$, and three
-thousand genomes of within-species variation, 1000G minus human-ref, give
-$-0.0054$ $[-0.025,+0.013]$. Both contain zero, and neither point estimate
-licenses the claim that the richer option is worse. All four models sit about $0.23$ below the substitution-matrix bar,
-and every attenuation ceiling lies between $0.866$ and $0.901$, so none of these
-nulls is a power failure.
+Table~\ref{tab:free} reports all three. No factor moves the result past the bar.
+Codon-aligned tokenization, 3-mer minus 6-mer, gives $-0.0156$ $[-0.043,+0.012]$,
+and three thousand genomes of within-species variation, 1000G minus human-ref, give
+$-0.0054$ $[-0.025,+0.013]$. Both contain zero, and neither point estimate licenses
+the claim that the richer option is worse. Every attenuation ceiling lies between
+$0.846$ and $0.901$, so none of these nulls is a power failure, with one cell
+excepted: \texttt{AMIE\_PSEAE\_Wrenbeck\_2017} under the 850-species model returns
+$\kappa=0$, its synonymous spread exactly swamping its between-variant spread, and we
+report that cell as uninformative rather than null. Excluding it moves the breadth
+difference from $+0.0395$ to $+0.0397$ at the cluster level.
 
-We note one sampling lesson from the run itself. At 14 of the 25 assays the
-tokenizer difference read $-0.0302$ with an interval excluding zero, and that did
-not survive the remaining eleven. These intervals are wide at small $n$ and a
-partial sweep is not a result.
+\paragraph{Breadth, and the one contrast where our two estimators disagree.}
+Cross-species breadth is larger than either of the other two factors and is the only
+contrast in this paper whose verdict depends on which interval is used. The
+percentile bootstrap over assays, the estimator used for every other row of
+Table~\ref{tab:free}, gives $+0.0322$ $[+0.001,+0.068]$ and excludes zero by
+$0.0011$. The $t$ interval with a sign-flip permutation test, which is what our
+released module implements and what we report at both unit levels throughout, gives
+the identical point estimate with $[-0.004,+0.069]$ and $p=0.079$, containing zero;
+at the cluster level it gives $+0.0395$ $[-0.003,+0.082]$ with $p=0.066$.
 
-\paragraph{What remains unmeasured.} Cross-species corpus breadth, available as
-NT~2.5B trained on 1000G against the same size trained on 850 species, is the one
-free contrast we could not run, for storage and not compute reasons. It is also the
-most informative of the three, since Evo~2 trains across all domains of life and
-breadth is the most plausible remaining account of its margin. We report its absence
-explicitly because the conclusion we draw in Section~\ref{sec:future} would change
-if it showed a gradient.
+We report the disagreement rather than choosing the convenient side of it, and we
+take the $t$ interval as governing, for the reason that motivates this paper: a
+percentile bound sitting $0.0011$ from zero at $n=25$ is not a measurement of a
+gradient, and the minimum detectable effect of the cluster-level test is $0.0573$,
+above the $+0.0395$ observed. This is a non-detection on an underpowered panel, not
+a demonstration that breadth buys nothing, and we say so in both directions: a larger
+panel could resolve it, and we would not be surprised if breadth were a small real
+effect. What it is not is a gradient that reaches the bar. At $+0.0395$ against a
+$0.20$ gap to BLOSUM62, a confirmed breadth effect of this size would leave the
+850-species model carrying no transfer, so it would sharpen the account of Evo~2's
+margin without changing any claim in this paper.
+
+The honesty cost of this is worth stating plainly. An earlier version of this paper
+named breadth as the contrast whose outcome would change our recommendation. Had we
+read only the bootstrap column, we would now be reporting that it showed a gradient
+and reopening a compute argument on the strength of $0.0011$.
+
+We note one further sampling lesson from the runs themselves. At 14 of the 25 assays
+the tokenizer difference read $-0.0302$ with an interval excluding zero, and that did
+not survive the remaining eleven. These intervals are wide at small $n$ and a partial
+sweep is not a result --- which is the same lesson the breadth bootstrap teaches at
+full $n$, one estimator removed.
 
 \subsection{Genomic models on their own task}
 
@@ -538,19 +585,29 @@ that neither the Nucleotide Transformer nor Evo~2 publishes intermediate-step
 checkpoints, every repository carrying a single branch and one weight file. The
 token axis is therefore closed to any study of frozen models.
 
-Corpus and tokenization are not closed, and Section~\ref{sec:stage0} measures
-both. Neither moves the result, which bears on what a pretraining ladder could be
-expected to find. Of the three factors separable without training a model, two are
-flat and the third is unmeasured here.
+Corpus and tokenization are not closed, and Section~\ref{sec:stage0} measures all
+three contrasts they afford. None moves the result past the bar, which bears on what
+a pretraining ladder could be expected to find. Of the three factors separable
+without training a model, all three are flat.
 
 What remains genuinely unobservable from released models is the token budget and
 any factor crossed with it. A ladder pretrained under controlled variation of
 parameters, tokens and corpus composition would close it, and Appendix~A gives a
 design and budget. We state the case against that ladder as plainly as the case
-for it: with two of three free axes null, the argument for the spend rests on the
-token axis alone, and we would not undertake it before the breadth contrast of
-Section~\ref{sec:stage0} is run, since that is three orders of magnitude cheaper
-and bears on the same question.
+for it, and with breadth now measured the case against has got stronger rather than
+weaker: all three free axes are flat, so the argument for the spend rests on the
+token axis alone --- a single unmeasured factor carrying a five-figure compute
+request. We do not undertake it, and we think the honest form of this contribution is
+the measurement protocol with three controlled negative contrasts behind it rather
+than a trained ladder expected to find the same thing.
+
+That recommendation is now made on a measurement rather than on a projection, which
+is the only reason we are willing to state it this firmly. We flag the one way it
+could still be wrong: breadth is the largest of the three contrasts, its cluster-level
+test could not have detected an effect below $0.0573$, and a panel larger than 25
+assays could turn it into a small real effect. That would locate part of Evo~2's
+margin in corpus range, which is a result we would welcome, and it would still leave
+the 850-species model $0.20$ short of a substitution matrix.
 
 Every assay used here has homologs, so the regime where a sequence has no relatives
 is untested. The regulatory arm covers two small models and licenses nothing about
@@ -566,11 +623,28 @@ setting where the map is known exactly, which makes it the setting where the
 controls are exactly constructible and where their consequences can be seen most
 clearly. In this setting they removed four claims, three of them ours, and left a
 smaller result standing: genomic-to-protein transfer exists at Evo~2 scale and does
-not clear a substitution matrix. Two factors that might have explained it, codon
-tokenization and corpus diversity, do not, and we were able to establish that from
-released checkpoints without training anything. A reviewer entitled to ask what
-would change our mind has a short answer: cross-species corpus breadth, at a cost
-of one download.
+not clear a substitution matrix. Three factors that might have explained it ---
+codon-aligned tokenization, within-species corpus diversity and cross-species corpus
+breadth --- do not, and we established all three from released checkpoints without
+training anything.
+
+A reviewer entitled to ask what would change our mind had a short answer in an
+earlier version of this paper: cross-species corpus breadth, at a cost of one
+download. We ran it, and it did not change our mind, which is the outcome we had
+committed in advance to reporting either way. The answer is now longer and less
+comfortable. The token budget would change our mind and no number of released
+checkpoints can supply it, so the question is closed to studies of frozen models and
+open only to a pretrained ladder we argue against funding. Within what is reachable,
+the honest statement is that every factor we can vary at matched architecture leaves
+genomic-to-protein transfer below a substitution matrix, and that the one factor we
+cannot vary is the one a future result would have to move.
+
+We would add that the most interesting thing we learned from the breadth contrast was
+not its value. It was that two standard interval estimators disagreed on it, one
+excluding zero by $0.0011$ and one not, and that the protocol in this paper is what
+made the disagreement visible rather than decisive. A paper about measurement
+validity should be able to report that its own last experiment came within $0.0011$
+of a different conclusion.
 
 \bibliographystyle{icml2027}
 \bibliography{refs}

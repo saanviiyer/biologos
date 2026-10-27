@@ -130,21 +130,30 @@ models substitutes.
 **Stage 0, COMPLETE 26 Oct 2026. All three axes null; the gate is not passed and
 the ladder is closed.**
 
-| axis | contrast | paired difference | verdict |
-|---|---|---|---|
-| tokenization | NT-v2 50M 3-mer minus 6-mer | -0.0156 [-0.0426, +0.0119] | flat |
-| corpus diversity | NT 500M 1000G minus human-ref | -0.0054 [-0.0246, +0.0131] | flat |
-| corpus breadth | NT 2.5B multi-species minus 1000G | +0.0395 [-0.0032, +0.0821] | flat |
+| axis | contrast | assay level | cluster level | verdict |
+|---|---|---|---|---|
+| tokenization | NT-v2 50M 3-mer minus 6-mer | -0.0156 [-0.0451, +0.0140] | -0.0145 [-0.0454, +0.0165] | flat |
+| corpus diversity | NT 500M 1000G minus human-ref | -0.0054 [-0.0259, +0.0150] | -0.0010 [-0.0228, +0.0208] | flat |
+| corpus breadth | NT 2.5B multi-species minus 1000G | +0.0322 [-0.0044, +0.0689] | +0.0395 [-0.0032, +0.0821] | flat |
 
-Every contrast is cluster level over 21 clusters. All six models land 0.190 to 0.257
-below BLOSUM62, so none of these is a power failure: attenuation ceilings run 0.846
-to 0.901, with one cell excepted -- `AMIE_PSEAE_Wrenbeck_2017` under 2.5B
-multi-species returns a ceiling of 0.0000 and is reported as uninformative rather
-than null. Dropping it moves breadth to +0.0397 and changes nothing. Section 46 has
-the full arm, including the disagreement between the percentile bootstrap in
-`analyze_stage0.py`, which reads this contrast as excluding zero by 0.0011, and
-`validity.paired_contrast`, whose t interval and permutation p contain zero and
-which governs.
+Both unit levels, because the first two rows were previously quoted here at assay
+level only and a one-line summary that mixed the two would be the error this project
+exists to catch. Intervals are `validity.paired_contrast` t intervals throughout, so
+the first two rows differ in the third decimal from the percentile intervals the
+paper's table reports.
+
+All six models land 0.190 to 0.257 below BLOSUM62, so none of these is a power
+failure: attenuation ceilings run 0.846 to 0.901, with one cell excepted --
+`AMIE_PSEAE_Wrenbeck_2017` under 2.5B multi-species returns a ceiling of 0.0000 and
+is reported as uninformative rather than null. Dropping it moves breadth to +0.0397
+and changes nothing.
+
+**Breadth is the one contrast where the two estimators disagree**, and section 46 has
+the full treatment. The percentile bootstrap over assays that `analyze_stage0.py`
+runs excludes zero by 0.0011; the t interval with a sign-flip permutation p that
+`validity.py` implements contains zero at both unit levels, at p 0.0786 and 0.0657.
+The latter governs. The panel could not have detected an effect below 0.0573, so this
+is a non-detection rather than a demonstration of equivalence.
 
 **The gate said to make the case explicitly before proceeding, so here it is: do not
 fund the ladder.** This is no longer a projection. All three factors separable
