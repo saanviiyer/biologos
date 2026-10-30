@@ -386,9 +386,21 @@ therefore $+0.228$, not $+0.465$.
 
 The Nucleotide Transformer does not clear it, losing to BLOSUM62 by $+0.241$
 $[+0.200,+0.283]$ in 24 of 25 assays. Its attenuation ceiling is $0.900$, so this
-is a null and not a power failure. Marginalising over synonymous codons, which
-removes the leak of Section~\ref{sec:map} by construction and is the only genomic
-score entitled to be called a protein-level proxy, scores $-0.019$.
+is a null and not a power failure.
+
+\paragraph{The marginalised score, specified.} Summing the codon fibre out removes
+the leak of Section~\ref{sec:map} by construction, and is the only genomic score
+entitled to be called a protein-level proxy. It scores $-0.008$. How the sum is
+taken matters: averaging log-ratios over the fibre rather than log-summing them is a
+geometric mean of codon likelihoods and not a marginal at all, and gives $-0.019$.
+Both are nulls whose intervals contain zero, so no reading of
+Table~\ref{tab:main} turns on the choice. We report it because the $+0.011$ gap is
+wider than the $-0.0054$ corpus-diversity contrast of Table~\ref{tab:free}, which
+we went to the trouble of measuring, and because the two scores agree across assays
+at only $+0.59$. The sign of the gap is the same at all four sizes, from $+0.001$ to
+$+0.011$, but the paired change is not significant ($p=0.30$), so this is a defect
+in what a quantity was called and not a measured bias. The attenuation ceiling is
+unaffected, being a dispersion within the fibre rather than an aggregate over it.
 
 Evo~2 does clear zero, at $+0.266$ with an interval excluding it and positive on 23
 of 25 assays. It does not clear the substitution matrix: Evo~2 minus BLOSUM62 is
@@ -402,7 +414,11 @@ The Nucleotide Transformer is flat in level across four sizes but not in order,
 and the distinction decides what the extrapolation below is worth. The four means
 run from $-0.0132$ at 50M to $+0.0083$ at 500M and every one of their intervals
 contains zero, so no size in the family carries protein-fitness signal. They are
-nonetheless monotone in parameter count, Spearman $+1.000$.
+nonetheless monotone in parameter count, Spearman $+1.000$. That ordering belongs
+to this score and not to the family: under either marginalisation of the preceding
+paragraph the 100M rung falls below the 50M one and the coefficient drops to
+$+0.800$. The trend we fit below is therefore the most favourable of the three
+orderings available, which is the spirit in which it is offered.
 
 We fit a trend to grant the scaling account its best case, not because these data
 establish one. Regressing $\rho$ on $\log_{10} N$ gives a slope of $+0.0207$ per

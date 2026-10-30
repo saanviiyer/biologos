@@ -100,7 +100,13 @@ Each gate is a stop condition, written before any run.
   reported as such, not as transfer. This gate is why the ladder is worth running:
   it is the one check Evo 2 has never been given.
 - **G4, codon marginalisation.** Any cell clearing G2 and G3 is re-scored
-  marginalised over synonymous codons. The marginalised score is the headline.
+  marginalised over synonymous codons. The marginalised score is the headline, and
+  it must be an actual marginal: log-sum-exp over the codon fibre in *both* the
+  numerator and the denominator. Averaging log-ratios over the fibre is a geometric
+  mean of codon likelihoods, not a marginal, and the NT arm shows the two differ by
+  more than one of the corpus contrasts this paper reports. A cell whose headline is
+  a mean of logs has not cleared this gate. Report the symmetric marginal; where the
+  asymmetric variant (log-sum-exp numerator only) is also computed, report both.
 - **G5, no trend without a control.** No trend over N, D or corpus is reported
   without the matched-control twin that Section 3.3 of the paper requires.
 

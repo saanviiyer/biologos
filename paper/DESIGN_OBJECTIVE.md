@@ -166,8 +166,19 @@ restated so this arm is self-contained; G6 is new and specific to diffusion.
   produce a correction rather than a result.
 - **G4, codon marginalisation.** Any nucleic-acid cell clearing G2 and G3 is
   re-scored marginalised over synonymous codons, via the existing
-  `glm.synonymous_ensemble` and the `rho_nt_codon_marginalised` column. The
-  marginalised score is the headline.
+  `glm.synonymous_ensemble`. The marginalised score is the headline, and it must be
+  an actual marginal: log-sum-exp over the codon fibre in *both* numerator and
+  denominator. **Do not inherit the `rho_nt_codon_marginalised` column**, which
+  averages log-ratios and is therefore a geometric mean of codon likelihoods rather
+  than a marginal; `scripts/run_codon_marginal_audit.py` measures the difference and
+  `results/codon_marginal_audit{,_ladder}.csv` record it. On the NT ladder the two
+  specifications differ by +0.001 to +0.011, wider than the within-species corpus
+  contrast the paper reports, they agree across assays at only +0.59, and the
+  parameter-count monotonicity holds under one and not the other. Any cell whose
+  headline is a mean of logs has not cleared this gate. A second trap the NT arm
+  paid for: resolve codon tokens against the vocabulary explicitly and count the
+  misses, rather than falling back to `unk_token_id`, which silently scored 369
+  absent tokens across the ladder.
 - **G5, no trend without a control.** No trend over objective, scale or mask rate is
   reported without a matched control twin, per section 3.3 of the paper.
 - **G6, the score is the same score.** Every cell in a table must be scored by the
