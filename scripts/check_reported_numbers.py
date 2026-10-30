@@ -60,6 +60,30 @@ def load():
     return s, cl, nt, tok, cor, ctrl
 
 
+def codon_audit_spearman():
+    """Spearman of mean rho against parameter count, per scoring convention.
+
+    The monotonicity claim in Section 4.2 is a property of the preferred-codon
+    score and not of the family: under any marginalisation the 100M rung falls
+    below the 50M one. Both coefficients are checked here because +0.800 was
+    also, separately, the value the pre-fix scaling bug produced for the
+    preferred-codon score, and a bare number cannot tell the two apart.
+    """
+    from scipy.stats import spearmanr
+    rows = []
+    for f in ("results/codon_marginal_audit.csv",
+              "results/codon_marginal_audit_ladder.csv"):
+        rows += list(csv.DictReader((ROOT / f).open()))
+    size = lambda m: int(m.split("-v2-")[1].split("m-")[0])
+    sizes = sorted({size(r["nt_model"]) for r in rows})
+    out = {}
+    for col in ("rho_pref", "rho_mean_logs", "rho_lse_mut", "rho_lse_sym"):
+        means = [np.mean([float(r[col]) for r in rows if size(r["nt_model"]) == z])
+                 for z in sizes]
+        out[col] = spearmanr(sizes, means).statistic
+    return out
+
+
 def paired(a, b):
     k = sorted(set(a) & set(b))
     return np.array([a[i] - b[i] for i in k])
@@ -67,6 +91,7 @@ def paired(a, b):
 
 def main():
     s, cl, nt, tok, cor, ctrl = load()
+    aud = codon_audit_spearman()
     panel = sorted(set(s["b62"]) & set(s["evo2"]))
     x = np.log10([5e7, 1e8, 2.5e8, 5e8])
     y = np.array([nt[t].mean() for t in ("50m", "100m", "250m", "500m")])
@@ -89,6 +114,8 @@ def main():
         ("NT prediction at 7B",       pred7b,                   "+0.028"),
         ("Evo 2 shortfall factor",    evo / pred7b,             "9.5"),
         ("params to reach BLOSUM62",  (b62 - icept) / slope,    "19.5"),
+        ("scaling Spearman, pref",    aud["rho_pref"],          "+1.000"),
+        ("scaling Spearman, marginal", aud["rho_lse_sym"],      "+0.800"),
         ("map control, canonical",    ctrl.get("canonical", float("nan")),    "+0.141"),
         ("map control, frameshift",   ctrl.get("frameshift+1", float("nan")), "+0.143"),
         ("map control, revcomp",      ctrl.get("reverse_complement", float("nan")), "+0.129"),
@@ -97,7 +124,9 @@ def main():
     # Values that were published and are now known wrong. Any survivor is a bug.
     RETIRED = [
         ("+0.0179", "pre-fix scaling slope"),
-        ("+0.800",  "pre-fix Spearman"),
+        ("Spearman $+0.800$", "pre-fix scaling Spearman; the marginalised "
+                              "coefficient is a different quantity and is "
+                              "checked above"),
         ("+0.0241", "pre-fix 7B prediction"),
         ("factor of eleven", "pre-fix shortfall"),
         ("11x",     "pre-fix shortfall"),

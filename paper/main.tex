@@ -1,29 +1,25 @@
-\documentclass{article}
-% ICML 2027 had not released an author kit as of 29 Oct 2026 (icml.cc/Conferences/2027
-% and media.icml.cc/Conferences/ICML2027/ both 404). This is the official ICML 2026
-% kit, downloaded from media.icml.cc; swap both icml2026 references when 2027 ships.
-\usepackage{icml2026}
-\usepackage{booktabs,amsmath,amssymb,graphicx,xcolor,microtype,url}
-\usepackage[hidelinks]{hyperref}
+\documentclass[11pt]{article}
+% Official *ACL style kit, from github.com/acl-org/acl-style-files (master branch,
+% downloaded 29 Oct 2026). acl.sty loads geometry, caption, natbib and hyperref
+% itself and sets \bibliographystyle{acl_natbib}, so none of those is set here.
+% Switch [review] to [final] for the camera-ready version.
+\usepackage[review]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs,amsmath,amssymb,graphicx,xcolor,microtype}
 
-\icmltitlerunning{Transfer That Survives Its Controls}
+\title{Transfer That Survives Its Controls:\\
+A Validity Protocol for Cross-Representation Claims in Biological Sequence Models}
+
+\author{Saanvi Skanda Subramanian \\
+  Computation and Neural Systems \\
+  California Institute of Technology \\
+  \texttt{ssubramanian@caltech.edu}}
 
 \begin{document}
-
-\twocolumn[
-\icmltitle{Transfer That Survives Its Controls:\\
-A Validity Protocol for Cross-Representation Claims in Biological Sequence Models}
-\icmlsetsymbol{equal}{*}
-\begin{icmlauthorlist}
-\icmlauthor{Saanvi Skanda Subramanian}{caltech}
-\end{icmlauthorlist}
-\icmlaffiliation{caltech}{Computation and Neural Systems, California Institute of Technology}
-\icmlcorrespondingauthor{Saanvi Skanda Subramanian}{ssubramanian@caltech.edu}
-\icmlkeywords{evaluation, scientific machine learning, protein language models, genomic language models}
-\vskip 0.3in
-]
-
-\printAffiliationsAndNotice{}
+\maketitle
 
 \begin{abstract}
 A substitution matrix with no learned parameters reaches 49\% of a
@@ -59,8 +55,9 @@ another are common and consequential. A genomic language model that scored prote
 fitness would let practitioners rank variants without a protein model, and would be
 evidence that the model had internalised the genetic code and not merely nucleotide
 statistics. Similar claims are made for multimodal encoders, for code models
-reasoning about natural language, for cross-lingual transfer, and for any
-system said to have acquired a capability it was not
+reasoning about natural language, for cross-lingual transfer, where whether a
+multilingual model shares structure or merely shares vocabulary was contested for
+several years, and for any system said to have acquired a capability it was not
 trained on.
 
 These claims are hard to check because the representations are not independent.
@@ -76,7 +73,7 @@ it changes the conclusion four times. We state the protocol first because it is 
 part intended to be reused. We have not reused it: every number in this paper comes
 from biological sequence models on one benchmark, and the generality is argued from
 each control's precondition rather than demonstrated across domains.
-Section~\ref{sec:future} says what that leaves open.
+The Limitations section says what that leaves open.
 
 \paragraph{Contributions.}
 \begin{enumerate}\itemsep0pt
@@ -160,8 +157,10 @@ Section~\ref{sec:trivial} performs that conversion, at 29 of 194 units. That
 label variation is signal and not noise is standard
 \citep{plank2022problem,pavlick2019inherent}, yet neither yields a bound on
 achievable correlation, which needs inputs sharing a label by construction rather
-than by judgement. Section~\ref{sec:ceiling} gets that free from the genetic
-code.
+than by judgement. Section~\ref{sec:ceiling} gets that set free from the genetic
+code. We claim no result about language. We claim that three concerns the field
+already holds become exactly measurable where the map is known, and we report what
+happens when they are measured.
 
 \paragraph{Noise ceilings.} Attenuation corrections are standard in psychometrics
 and in neural encoding models, where repeat measurements bound explainable
@@ -265,29 +264,6 @@ revised afterwards. We state this because the protocol's claim is about validity
 and a validity protocol whose own thresholds were tuned against its results would
 be self-defeating.
 
-\begin{table}[t]
-\centering\small
-\caption{Every constant in the protocol, its value, and how it was fixed. The
-statistical constants are determined by the stated error rate or by convention
-and admit no choice; the inclusion filters are the only ones that could have been
-tuned, and the panel is insensitive to both.}
-\label{tab:hyper}
-\begin{tabular}{@{}llp{3.1cm}@{}}
-\toprule
-constant & value & how fixed \\
-\midrule
-target length cap & 420 aa & any value in $[414,489]$ gives the same panel \\
-min.\ usable singles & 200 & non-binding; Spearman SE $\le 1/\sqrt{197}=0.071$ \\
-identity threshold & $30\%$ & conventional twilight-zone boundary \\
-min.\ aligned columns & 50 & shorter windows reach $31\%$ by chance \\
-coverage minimum & $0.50$ & rejects identity over a fragment \\
-permutation resamples & 20{,}000 & resampling error $<0.004$ at $p=0.08$ \\
-bootstrap resamples & 20{,}000 & matched to the permutation count \\
-power constant $z$ & $2.801582$ & $80\%$ power, two-sided $\alpha=0.05$ \\
-RNG seed & 0 & single declared value; see below \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \paragraph{Determinism.} Model scoring is deterministic: masked-marginal and
 autoregressive log-likelihoods under fixed weights involve no sampling, so a
@@ -308,6 +284,24 @@ hardware never exceeded a few hours per arm, and no result in the paper requires
 more than a single 80GB GPU.
 
 \section{Results}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig/panels.pdf}
+\caption{What the genomic models are worth, drawn from \texttt{results/} by
+\texttt{scripts/make\_figures.py}. \textbf{(a)} Mean Spearman $\rho$ across 25 DMS
+assays, identical protocol and region, with $95\%$ percentile-bootstrap intervals
+over assays; the dashed line is BLOSUM62, so the bar a genomic model must clear is
+a substitution matrix and not zero. \textbf{(b)} The Nucleotide Transformer ladder
+and the trend fitted to it, which predicts $+0.0281$ at 7B against Evo~2's measured
+$+0.2658$: Evo~2 is not on the line that scaling this family would trace.
+\textbf{(c)} Three contrasts from released checkpoints, each varying one factor at
+matched architecture, stated as the richer option minus its baseline. Both
+estimators are drawn because they disagree on the third. Exact intervals,
+per-model means and attenuation ceilings in
+Tables~\ref{tab:main} and~\ref{tab:free}.}
+\label{fig:panels}
+\end{figure*}
 
 \subsection{What the controls remove}
 
@@ -380,25 +374,7 @@ past the first increment changes AUC by $+0.016$ and then nothing.
 
 \subsection{Transfer across 25 assays}
 
-\begin{table}[t]
-\caption{Mean Spearman $\rho$ across 25 DMS assays, identical protocol and region.
-Intervals are 95\% over assays.}
-\label{tab:main}
-\centering\small
-\begin{tabular}{lcc}
-\toprule
-scorer & mean $\rho$ & 95\% CI \\
-\midrule
-ESM-2 650M (protein) & $+0.4655$ & $[+0.395,+0.536]$ \\
-chemistry ridge, LOCO & $+0.2860$ & $[+0.248,+0.324]$ \\
-\textbf{Evo~2 7B (genomic)} & $\mathbf{+0.2658}$ & $[+0.202,+0.330]$ \\
-BLOSUM62 alone & $+0.2282$ & $[+0.195,+0.261]$ \\
-NT-v2 50M (genomic) & $-0.0132$ & $[-0.033,+0.007]$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:main} is the headline. Three readings follow, and the trivial
+Figure~\ref{fig:panels}(a) is the headline. Three readings follow, and the trivial
 baseline decides all three.
 
 A substitution matrix with no model of any kind reaches 49\% of ESM-2 and is
@@ -417,8 +393,8 @@ entitled to be called a protein-level proxy. It scores $-0.008$. How the sum is
 taken matters: averaging log-ratios over the fibre rather than log-summing them is a
 geometric mean of codon likelihoods and not a marginal at all, and gives $-0.019$.
 Both are nulls whose intervals contain zero, so no reading of
-Table~\ref{tab:main} turns on the choice. We report it because the $+0.011$ gap is
-wider than the $-0.0054$ corpus-diversity contrast of Table~\ref{tab:free}, which
+Figure~\ref{fig:panels}(a) turns on the choice. We report it because the $+0.011$ gap is
+wider than the $-0.0054$ corpus-diversity contrast of Figure~\ref{fig:panels}(c), which
 we went to the trouble of measuring, and because the two scores agree across assays
 at only $+0.59$. The sign of the gap is the same at all four sizes, from $+0.001$ to
 $+0.011$, but the paired change is not significant ($p=0.30$), so this is a defect
@@ -443,7 +419,8 @@ paragraph the 100M rung falls below the 50M one and the coefficient drops to
 $+0.800$. The trend we fit below is therefore the most favourable of the three
 orderings available, which is the spirit in which it is offered.
 
-We fit a trend to grant the scaling account its best case, not because these data
+Figure~\ref{fig:panels}(b) shows the ladder. We fit a trend to
+grant the scaling account its best case, not because these data
 establish one. Regressing $\rho$ on $\log_{10} N$ gives a slope of $+0.0207$ per
 decade and an intercept of $-0.1762$; on four points that slope carries a standard
 error of $0.0069$ and is not significant, at $p=0.083$ by exact permutation over
@@ -460,7 +437,7 @@ produces its protein-fitness signal is a property of architecture and corpus, an
 scale alone does not buy it. We note the limitation squarely: with one point off
 the line we can reject the scaling account but cannot identify which of
 architecture, corpus or token budget is responsible, because none of these is a
-variable we control. Section~\ref{sec:future} says what would.
+variable we control. The Limitations section says what would.
 
 \subsection{Architecture and corpus, measured from released checkpoints}
 \label{sec:stage0}
@@ -469,8 +446,8 @@ Section~\ref{sec:scale} rejects the scaling account but cannot say which of
 architecture, corpus or token budget produces Evo~2's signal, because those are
 confounded between the two families. Released checkpoints resolve three contrasts at
 matched architecture, for inference cost only. We ran all three. The token budget is
-not among them, and Section~\ref{sec:future} says why no number of released
-checkpoints can supply it.
+not among them, and the Limitations section says why no number of
+released checkpoints can supply it.
 
 \paragraph{Codon-aligned tokenization does not help.} The v2 family ships a 3-mer
 variant that is otherwise identical to the 6-mer 50M model: 512 hidden, 12 layers,
@@ -493,41 +470,10 @@ spans 850 species. This is the most informative of the three contrasts, because
 Evo~2 trains across all domains of life and cross-species range was the most
 plausible surviving account of its margin. It is also the contrast on which our own
 conclusion was staked: an earlier version of this paper reported it as unrun and said
-explicitly that a gradient here would change the recommendation in
-Section~\ref{sec:future}.
+explicitly that a gradient here would change the recommendation we now
+make in the Limitations section.
 
-\begin{table}[t]
-\caption{Contrasts available from released checkpoints, each varying one factor at
-matched architecture. Paired bootstrap over 25 assays, each difference stated as
-the richer option minus its baseline. No model reaches the BLOSUM62 bar, every one
-missing it by $0.20$ to $0.26$. The first two differences contain zero under either
-estimator; the third is the one that does not, and is treated in the text.}
-\label{tab:free}
-\centering\small
-\begin{tabular}{lcccc}
-\toprule
-model & mean $\rho$ & 95\% CI & $\kappa$ & vs.\ B62 \\
-\midrule
-\multicolumn{5}{l}{\emph{tokenization, 850-genome corpus, 50M}}\\
-\quad 6-mer & $-0.0132$ & $[-0.033,+0.006]$ & $0.900$ & $-0.241$ \\
-\quad 3-mer & $-0.0288$ & $[-0.053,-0.003]$ & $0.866$ & $-0.257$ \\
-\multicolumn{5}{l}{\quad paired, 3-mer minus 6-mer: $-0.0156\ [-0.043,+0.012]$, contains zero}\\
-\addlinespace
-\multicolumn{5}{l}{\emph{within-species corpus diversity, 500M}}\\
-\quad human-ref & $+0.0032$ & $[-0.015,+0.021]$ & $0.901$ & $-0.225$ \\
-\quad 1000G & $-0.0022$ & $[-0.024,+0.017]$ & $0.878$ & $-0.230$ \\
-\multicolumn{5}{l}{\quad paired, 1000G minus human-ref: $-0.0054\ [-0.025,+0.013]$, contains zero}\\
-\addlinespace
-\multicolumn{5}{l}{\emph{cross-species corpus breadth, 2.5B}}\\
-\quad 1000G & $-0.0019$ & $[-0.021,+0.016]$ & $0.888$ & $-0.230$ \\
-\quad 850 species & $+0.0303$ & $[-0.002,+0.072]$ & $0.846$ & $-0.198$ \\
-\multicolumn{5}{l}{\quad paired, 850 species minus 1000G: $+0.0322\ [+0.001,+0.068]$}\\
-\multicolumn{5}{l}{\quad same contrast, $t$ interval: $+0.0322\ [-0.004,+0.069]$, $p=0.079$}\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:free} reports all three. No factor moves the result past the bar.
+Figure~\ref{fig:panels}(c) reports all three. No factor moves the result past the bar.
 Codon-aligned tokenization, 3-mer minus 6-mer, gives $-0.0156$ $[-0.043,+0.012]$,
 and three thousand genomes of within-species variation, 1000G minus human-ref, give
 $-0.0054$ $[-0.025,+0.013]$. Both contain zero, and neither point estimate licenses
@@ -603,7 +549,36 @@ full control is 21 arms, 8{,}379 sequences and 41.9M tokens, against 167M for th
 original uncontrolled arms. A control that is cheaper than the experiment it checks
 has no compute excuse.
 
-\section{Limitations}
+\section{Conclusion}
+
+Nothing in the controls' statement is specific to biology. Any claim that a
+representation encodes a property of another modality related to it by a known
+map can in principle be checked by destroying the map, by bounding attenuation
+from within-fibre variance, and by matching a context manipulation on
+composition --- in principle, because we have tested this in one domain, and the
+hard step outside it is constructing a map-destroying manipulation when the map
+is not exact. Biology is where the map is known exactly, which makes it the
+setting where the controls are exactly constructible and their consequences
+visible. Here they removed four claims, three of them ours, and left a smaller
+result standing: genomic-to-protein transfer exists at Evo~2 scale and does not
+clear a substitution matrix, and the three factors we can vary at matched
+architecture do not explain it.
+
+A reviewer entitled to ask what would change our mind had a short answer in an
+earlier version of this paper: cross-species corpus breadth, at the cost of one
+download. We ran it, and it did not change our mind, which is the outcome we had
+committed in advance to reporting either way. The answer is now longer. The
+token budget would change our mind, and no number of released checkpoints can
+supply it.
+
+The most interesting thing we learned from that last contrast was not its value.
+It was that two standard interval estimators disagreed on it, one excluding zero
+by $0.0011$ and one not, and that the protocol here is what made the
+disagreement visible rather than decisive. A paper about measurement validity
+should be able to report that its own last experiment came within $0.0011$ of a
+different conclusion.
+
+\section*{Limitations}
 \label{sec:future}
 
 \paragraph{One benchmark.} Every measurement here is on ProteinGym, and the
@@ -671,40 +646,91 @@ Every assay used here has homologs, so the regime where a sequence has no relati
 is untested. The regulatory arm covers two small models and licenses nothing about
 larger ones. The specificity arm rests on one combinatorially complete landscape.
 
-\section{Conclusion}
-
-Nothing in the controls' statement is specific to biology. Any claim that a
-representation encodes a property of another modality related to it by a known
-map can in principle be checked by destroying the map, by bounding attenuation
-from within-fibre variance, and by matching a context manipulation on
-composition --- in principle, because we have tested this in one domain, and the
-hard step outside it is constructing a map-destroying manipulation when the map
-is not exact. Biology is where the map is known exactly, which makes it the
-setting where the controls are exactly constructible and their consequences
-visible. Here they removed four claims, three of them ours, and left a smaller
-result standing: genomic-to-protein transfer exists at Evo~2 scale and does not
-clear a substitution matrix, and the three factors we can vary at matched
-architecture do not explain it.
-
-A reviewer entitled to ask what would change our mind had a short answer in an
-earlier version of this paper: cross-species corpus breadth, at the cost of one
-download. We ran it, and it did not change our mind, which is the outcome we had
-committed in advance to reporting either way. The answer is now longer. The
-token budget would change our mind, and no number of released checkpoints can
-supply it.
-
-The most interesting thing we learned from that last contrast was not its value.
-It was that two standard interval estimators disagreed on it, one excluding zero
-by $0.0011$ and one not, and that the protocol here is what made the
-disagreement visible rather than decisive. A paper about measurement validity
-should be able to report that its own last experiment came within $0.0011$ of a
-different conclusion.
-
-\bibliographystyle{icml2026}
 \bibliography{refs}
 
 \clearpage
 \appendix
+
+\section{Full Result Tables}
+\label{app:tables}
+
+The figures in the body are drawn from these tables by
+\texttt{scripts/make\_figures.py}, which reads \texttt{results/} directly, so a
+figure cannot disagree with the numbers here.
+
+\begin{table}[t]
+\centering\small
+\caption{Every constant in the protocol, its value, and how it was fixed. The
+statistical constants are determined by the stated error rate or by convention
+and admit no choice; the inclusion filters are the only ones that could have been
+tuned, and the panel is insensitive to both.}
+\label{tab:hyper}
+\begin{tabular}{@{}llp{3.1cm}@{}}
+\toprule
+constant & value & how fixed \\
+\midrule
+target length cap & 420 aa & any value in $[414,489]$ gives the same panel \\
+min.\ usable singles & 200 & non-binding; Spearman SE $\le 1/\sqrt{197}=0.071$ \\
+identity threshold & $30\%$ & conventional twilight-zone boundary \\
+min.\ aligned columns & 50 & shorter windows reach $31\%$ by chance \\
+coverage minimum & $0.50$ & rejects identity over a fragment \\
+permutation resamples & 20{,}000 & resampling error $<0.004$ at $p=0.08$ \\
+bootstrap resamples & 20{,}000 & matched to the permutation count \\
+power constant $z$ & $2.801582$ & $80\%$ power, two-sided $\alpha=0.05$ \\
+RNG seed & 0 & single declared value; see below \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Mean Spearman $\rho$ across 25 DMS assays, identical protocol and region.
+Intervals are 95\% over assays.}
+\label{tab:main}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+scorer & mean $\rho$ & 95\% CI \\
+\midrule
+ESM-2 650M (protein) & $+0.4655$ & $[+0.395,+0.536]$ \\
+chemistry ridge, LOCO & $+0.2860$ & $[+0.248,+0.324]$ \\
+\textbf{Evo~2 7B (genomic)} & $\mathbf{+0.2658}$ & $[+0.202,+0.330]$ \\
+BLOSUM62 alone & $+0.2282$ & $[+0.195,+0.261]$ \\
+NT-v2 50M (genomic) & $-0.0132$ & $[-0.033,+0.007]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]
+\caption{Contrasts available from released checkpoints, each varying one factor at
+matched architecture. Paired bootstrap over 25 assays, each difference stated as
+the richer option minus its baseline. No model reaches the BLOSUM62 bar, every one
+missing it by $0.20$ to $0.26$. The first two differences contain zero under either
+estimator; the third is the one that does not, and is treated in the text.}
+\label{tab:free}
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+model & mean $\rho$ & 95\% CI & $\kappa$ & vs.\ B62 \\
+\midrule
+\multicolumn{5}{l}{\emph{tokenization, 850-genome corpus, 50M}}\\
+\quad 6-mer & $-0.0132$ & $[-0.033,+0.006]$ & $0.900$ & $-0.241$ \\
+\quad 3-mer & $-0.0288$ & $[-0.053,-0.003]$ & $0.866$ & $-0.257$ \\
+\multicolumn{5}{l}{\quad paired, 3-mer minus 6-mer: $-0.0156\ [-0.043,+0.012]$, contains zero}\\
+\addlinespace
+\multicolumn{5}{l}{\emph{within-species corpus diversity, 500M}}\\
+\quad human-ref & $+0.0032$ & $[-0.015,+0.021]$ & $0.901$ & $-0.225$ \\
+\quad 1000G & $-0.0022$ & $[-0.024,+0.017]$ & $0.878$ & $-0.230$ \\
+\multicolumn{5}{l}{\quad paired, 1000G minus human-ref: $-0.0054\ [-0.025,+0.013]$, contains zero}\\
+\addlinespace
+\multicolumn{5}{l}{\emph{cross-species corpus breadth, 2.5B}}\\
+\quad 1000G & $-0.0019$ & $[-0.021,+0.016]$ & $0.888$ & $-0.230$ \\
+\quad 850 species & $+0.0303$ & $[-0.002,+0.072]$ & $0.846$ & $-0.198$ \\
+\multicolumn{5}{l}{\quad paired, 850 species minus 1000G: $+0.0322\ [+0.001,+0.068]$}\\
+\multicolumn{5}{l}{\quad same contrast, $t$ interval: $+0.0322\ [-0.004,+0.069]$, $p=0.079$}\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 
 \section{Genomic Models on Their Own Benchmark Tasks}
 \label{app:owntask}
