@@ -26,9 +26,12 @@ A Validity Protocol for Cross-Representation Claims in Biological Sequence Model
 \printAffiliationsAndNotice{}
 
 \begin{abstract}
-DNA and protein are two encodings of one molecule related by an exactly known
-map. This makes biological sequence models a sharp setting for a question the
-rest of machine learning can only ask loosely: when a model trained on one
+A substitution matrix with no learned parameters reaches 49\% of a
+650M-parameter protein language model at variant-effect prediction, and the
+strongest genomic model we test does not separate from it. What a transfer claim
+is measured against therefore decides it. DNA and protein are two encodings of one
+molecule related by an exactly known map, which makes biological sequence models a
+sharp setting for a question the rest of machine learning can only ask loosely: when a model trained on one
 representation appears to know something about another, is that transfer, or an
 artifact of how the question was posed? We give four controls that decide it ---
 a noise ceiling read off the model's own violation of an invariance it should
@@ -56,8 +59,9 @@ another are common and consequential. A genomic language model that scored prote
 fitness would let practitioners rank variants without a protein model, and would be
 evidence that the model had internalised the genetic code and not merely nucleotide
 statistics. Similar claims are made for multimodal encoders, for code models
-reasoning about natural language, and for any system said to have acquired a
-capability it was not trained on.
+reasoning about natural language, for cross-lingual transfer, and for any
+system said to have acquired a capability it was not
+trained on.
 
 These claims are hard to check because the representations are not independent.
 Under any encoding rule the codon determines the amino acid, so the nucleotides at
@@ -76,6 +80,12 @@ Section~\ref{sec:future} says what that leaves open.
 
 \paragraph{Contributions.}
 \begin{enumerate}\itemsep0pt
+\item \textbf{Trivial baselines under correlated-unit accounting}
+(Section~\ref{sec:trivial}). BLOSUM62 alone reaches 49\% of ESM-2 across the same
+assays. A 60-parameter one-hot vector aligns with ESM-2 better than a genomic model
+does. On the genomic models' own benchmark tasks a positional one-hot wins
+outright. 194 ProteinGym assays are 165 independent proteins and must be counted
+as such.
 \item \textbf{A noise ceiling obtained from the model, not the data}
 (Section~\ref{sec:ceiling}). When many inputs must share a label by construction,
 the spread of model scores across them bounds the correlation any proxy built on
@@ -92,12 +102,6 @@ signal under both. The claim we tested did not.
 Context dose-response curves are reproduced by flanks matched on mononucleotide or
 dinucleotide composition and carrying no genomic information, in both directions of
 sign.
-\item \textbf{Trivial baselines under correlated-unit accounting}
-(Section~\ref{sec:trivial}). BLOSUM62 alone reaches 49\% of ESM-2 across the same
-assays. A 60-parameter one-hot vector aligns with ESM-2 better than a genomic model
-does. On the genomic models' own benchmark tasks a positional one-hot wins
-outright. 194 ProteinGym assays are 165 independent proteins and must be counted
-as such.
 \item \textbf{The case study}: genomic-to-protein transfer is an architecture and
 corpus property, not a scaling one (Section~\ref{sec:scale}).
 \end{enumerate}
@@ -139,6 +143,25 @@ scores reflect data leakage through a known map, and not learned structure, is
 familiar from natural language inference artifacts \citep{gururangan2018annotation}.
 We contribute the observation that biology supplies an exactly known map and
 therefore exactly constructible controls, which natural language does not.
+
+\paragraph{Cross-lingual transfer.} Three of our controls answer questions already
+asked of multilingual models, where our construction is unavailable. Whether
+measured transfer reflects shared structure or mere lexical overlap was tested by
+removing the overlap from training, and the answer was that overlap is not the
+mechanism \citep{conneau2020emerging,karthikeyan2020crosslingual}, typological
+relatedness mattering more than shared script \citep{pires2019multilingual};
+evaluation-side overlap remains a known artifact \citep{artetxe2020translation}.
+That test changes the model. Section~\ref{sec:map} holds the model fixed and
+destroys the map inside the input while preserving surface statistics, which only
+a known map permits. That a language sample is not the independent draw its count
+implies is an established concern \citep{ploeger2026principled}, raised against
+sampling practice rather than converted into an effective sample size;
+Section~\ref{sec:trivial} performs that conversion, at 29 of 194 units. That
+label variation is signal and not noise is standard
+\citep{plank2022problem,pavlick2019inherent}, yet neither yields a bound on
+achievable correlation, which needs inputs sharing a label by construction rather
+than by judgement. Section~\ref{sec:ceiling} gets that free from the genetic
+code.
 
 \paragraph{Noise ceilings.} Attenuation corrections are standard in psychometrics
 and in neural encoding models, where repeat measurements bound explainable
