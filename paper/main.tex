@@ -67,45 +67,47 @@ has read a lookup table. The difficulty is general. Whenever representation $A$
 determines property $P$ of modality $B$ by a known map, a measurement that claims
 $A$ encodes $P$ ``at the level of $B$'' must rule out the map itself.
 
-Our contribution is a protocol that rules it out, and a case study where applying
-it changes the conclusion four times. We state the protocol first because it is the
-part intended to be reused. We have not reused it: every number in this paper comes
-from biological sequence models on one benchmark, and the generality is argued from
-each control's precondition rather than demonstrated across domains.
-The Limitations section says what that leaves open.
+We ask whether the apparent transfer survives being asked properly, and find that
+most of it does not. Four checks decide the cases here: a noise ceiling read off
+the model's own violation of an invariance it should respect, manipulations that
+destroy the representation map while preserving surface statistics,
+composition-matched context twins, and trivial baselines under correlated-unit
+accounting. Each is stated against a precondition rather than against biology, so
+each should carry wherever a known map relates two representations. We have not
+shown that it does: every number here comes from biological sequence models on one
+benchmark. The Limitations section says what that leaves open.
 
 \paragraph{Contributions.}
 \begin{enumerate}\itemsep0pt
-\item \textbf{Trivial baselines under correlated-unit accounting}
-(Section~\ref{sec:trivial}). BLOSUM62 alone reaches 49\% of ESM-2 across the same
-assays. A 60-parameter one-hot vector aligns with ESM-2 better than a genomic model
-does. On the genomic models' own benchmark tasks a positional one-hot wins
-outright. 194 ProteinGym assays are 165 independent proteins and must be counted
-as such.
-\item \textbf{A noise ceiling obtained from the model, not the data}
-(Section~\ref{sec:ceiling}). When many inputs must share a label by construction,
-the spread of model scores across them bounds the correlation any proxy built on
-that model could achieve. For genomic models scoring coding sequences, synonymous
-encodings supply this set at no extra cost, since a single masked pass already
-prices every alternative. The resulting attenuation ceiling is $0.900$, so a null
-at $-0.013$ cannot be attributed to measurement noise. Without such a ceiling a
-null states nothing.
-\item \textbf{Map-destroying controls} (Section~\ref{sec:map}). Frameshifting and
-reverse-complementing destroy the DNA-to-protein map while leaving the sequence a
-plausible genomic string. A representation that is protein-level must lose its
-signal under both. The claim we tested did not.
-\item \textbf{Composition-matched context twins} (Section~\ref{sec:context}).
-Context dose-response curves are reproduced by flanks matched on mononucleotide or
-dinucleotide composition and carrying no genomic information, in both directions of
-sign.
-\item \textbf{The case study}: genomic-to-protein transfer is an architecture and
-corpus property, not a scaling one (Section~\ref{sec:scale}).
+\item \textbf{The bar is a substitution matrix, not zero}
+(Section~\ref{sec:trivial}). BLOSUM62 alone reaches 49\% of ESM-2 across 25
+assays, a 60-parameter one-hot vector aligns with ESM-2 better than a genomic
+model does, and on the genomic models' own benchmark tasks a positional one-hot
+wins outright. 194 ProteinGym assays are also 165 independent proteins, and must
+be counted as such.
+\item \textbf{The transfer does not survive a destroyed map}
+(Section~\ref{sec:map}). Frameshifting and reverse-complementing break the
+DNA-to-protein map while leaving a plausible genomic string, and a protein-level
+representation must lose its signal under both. A representation read as weak
+transfer at $\rho=+0.141$ scores $+0.143$ frameshifted. Context dose-response
+curves are likewise reproduced by flanks carrying no genomic information, in both
+directions of sign (Section~\ref{sec:context}).
+\item \textbf{The nulls are nulls, not power failures}
+(Section~\ref{sec:ceiling}). Synonymous encodings must share a label by
+construction, so the spread of model scores across them bounds the correlation any
+proxy built on that model could reach. A single masked pass already prices every
+alternative, so this costs nothing. The ceiling is $0.900$: a null at $-0.013$
+cannot be blamed on measurement noise.
+\item \textbf{What separates Evo~2 is architecture and corpus, not scale}
+(Section~\ref{sec:scale}). No Nucleotide Transformer size carries protein-fitness
+signal, and three contrasts available from released checkpoints at matched
+architecture each leave the result short of the bar.
 \end{enumerate}
 
 We report four retractions of our own earlier claims in Section~\ref{sec:retract}.
-We do this in the body, not an appendix, because the protocol's value is
-precisely that it caught them, and because a reader deciding whether to adopt it
-should see what it costs to not have had it.
+We do this in the body, not an appendix, because the value of these checks is
+precisely that they caught them, and because a reader deciding whether to adopt
+them should see what it costs not to have had them.
 
 \section{Related Work}
 
@@ -167,7 +169,7 @@ variance. Our variant obtains the ceiling from model-internal invariance violati
 and not from experimental replicates, which makes it available when replicates
 are not.
 
-\section{A Validity Protocol}
+\section{Four Controls}
 
 Let $f$ be a model scoring inputs in representation $A$, and let a claim assert
 that $f$ captures property $P$ defined on modality $B$, related to $A$ by a known
@@ -257,11 +259,11 @@ is autoregressive and is scored by summed token log-likelihood.
 Transformer's bundled remote code reads.
 
 \paragraph{Constants, and how they were set.} Table~\ref{tab:hyper} lists every
-free quantity in the protocol. None was selected by inspecting the outcome it
+free quantity below. None was selected by inspecting the outcome it
 governs: each was fixed before the contrast it enters was run, and none was
-revised afterwards. We state this because the protocol's claim is about validity,
-and a validity protocol whose own thresholds were tuned against its results would
-be self-defeating.
+revised afterwards. We state this because the claim here is about validity, and a
+check whose own thresholds were tuned against its results would be
+self-defeating.
 
 
 \paragraph{Determinism.} Model scoring is deterministic: masked-marginal and
@@ -510,7 +512,7 @@ named breadth as the contrast whose outcome would change our recommendation. Had
 read only the bootstrap column, we would now be reporting that it showed a gradient
 and reopening a compute argument on the strength of $0.0011$.
 
-\section{Four Claims the Protocol Overturned}
+\section{Four Claims the Controls Overturned}
 \label{sec:retract}
 
 \textbf{A reading-frame result was retracted.} A genomic model appeared unable to
@@ -530,7 +532,7 @@ as Table~\ref{tab:map} shows.
 protein-fitness signal'' held for the Nucleotide Transformer family and was written
 as though it held for genomic models. Evo~2 refutes it.
 
-\section{What the Protocol Costs}
+\section{What the Controls Cost}
 \label{sec:cost}
 
 Adoption is cheap, which is the argument for it.
@@ -572,7 +574,7 @@ supply it.
 
 The most interesting thing we learned from that last contrast was not its value.
 It was that two standard interval estimators disagreed on it, one excluding zero
-by $0.0011$ and one not, and that the protocol here is what made the
+by $0.0011$ and one not, and that reporting both is what made the
 disagreement visible rather than decisive. A paper about measurement validity
 should be able to report that its own last experiment came within $0.0011$ of a
 different conclusion.
@@ -592,7 +594,7 @@ we report the minimum detectable effect with every one rather than calling it
 equivalence. What one benchmark cannot establish is that the effect sizes
 transfer. A different panel --- different proteins, different assay types,
 different depth --- could move every number in Section~\ref{sec:scale} while
-leaving the protocol's verdicts intact, and nothing here tests that.
+leaving these verdicts intact, and nothing here tests that.
 
 \paragraph{Generality is argued, not shown.} The claim that these controls port
 outside biology rests on each one's precondition being statable without reference
@@ -630,7 +632,7 @@ for it, and with breadth now measured the case against has got stronger rather t
 weaker: all three free axes are flat, so the argument for the spend rests on the
 token axis alone --- a single unmeasured factor carrying a five-figure compute
 request. We do not undertake it, and we think the honest form of this contribution is
-the measurement protocol with three controlled negative contrasts behind it rather
+the measurement with three controlled negative contrasts behind it rather
 than a trained ladder expected to find the same thing.
 
 That recommendation is now made on a measurement rather than on a projection, which
@@ -659,7 +661,7 @@ figure cannot disagree with the numbers here.
 
 \begin{table}[t]
 \centering\small
-\caption{Every constant in the protocol, its value, and how it was fixed. The
+\caption{Every constant in the measurement, its value, and how it was fixed. The
 statistical constants are determined by the stated error rate or by convention
 and admit no choice; the inclusion filters are the only ones that could have been
 tuned, and the panel is insensitive to both.}
@@ -751,7 +753,7 @@ where billion-parameter models fail; they further find that larger models show
 correcting it. Their benchmark is purpose-built and better powered than our
 five-task probe. We therefore present this subsection as a corroborated side
 result rather than a contribution, and note that it is the arm of this work that
-claims least: the protocol and the zero-shot transfer measurement are where our
+claims least: the controls and the zero-shot transfer measurement are where our
 contribution sits.
 
 
@@ -759,7 +761,7 @@ contribution sits.
 \label{sec:tension}
 \citet{boshar2024glm} report Nucleotide Transformer v2 500M matching or beating
 ESM-2 on three of five protein tasks. We report the same family at $\rho=-0.013$
-against ESM-2's $+0.465$. Both can hold, and the protocol says why.
+against ESM-2's $+0.465$. Both can hold, and the map control says why.
 
 Fine-tuning fits a readout on top of the representation. Section~\ref{sec:map}
 shows that the genomic representation carries residue identity through the codon,
