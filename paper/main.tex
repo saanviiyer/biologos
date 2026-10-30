@@ -374,7 +374,22 @@ to $+0.400$ with $p=0.375$ once the no-context point is dropped, and the 300~nt 
 5400~nt score vectors correlate at $+0.963$. An eighteen-fold increase in context
 past the first increment changes AUC by $+0.016$ and then nothing.
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig/spread.pdf}
+\caption{The two aggregates of Figure~\ref{fig:panels} drawn per assay, by the
+same script from the same files. (a) Evo~2 against BLOSUM62, one point per
+assay, with the identity line: the $+0.0376$ mean is 14 assays above the line
+and 11 below, and the two scorers disagree about which proteins are hard rather
+than one dominating the other. (b) The scale ladder for each assay separately,
+under the four means the trend was fitted to: the widest rung spans $0.26$ in
+$\rho$ while the fitted trend covers $0.021$ across the whole decade, so the
+slope is a property of the average and not a prediction for an assay.}
+\label{fig:spread}
+\end{figure*}
+
 \subsection{Transfer across 25 assays}
+\label{sec:assays}
 
 Figure~\ref{fig:panels}(a) is the headline. Three readings follow, and the trivial
 baseline decides all three.
@@ -390,22 +405,18 @@ $[+0.200,+0.283]$ in 24 of 25 assays. Its attenuation ceiling is $0.900$, so thi
 is a null and not a power failure.
 
 \paragraph{The marginalised score, specified.} Summing the codon fibre out removes
-the leak of Section~\ref{sec:map} by construction, and is the only genomic score
-entitled to be called a protein-level proxy. It scores $-0.008$. How the sum is
-taken matters: averaging log-ratios over the fibre rather than log-summing them is a
-geometric mean of codon likelihoods and not a marginal at all, and gives $-0.019$.
-Both are nulls whose intervals contain zero, so no reading of
-Figure~\ref{fig:panels}(a) turns on the choice. We report it because the $+0.011$ gap is
-wider than the $-0.0054$ corpus-diversity contrast of Figure~\ref{fig:panels}(c), which
-we went to the trouble of measuring, and because the two scores agree across assays
-at only $+0.59$. The sign of the gap is the same at all four sizes, from $+0.001$ to
-$+0.011$, but the paired change is not significant ($p=0.30$), so this is a defect
-in what a quantity was called and not a measured bias. The attenuation ceiling is
-unaffected, being a dispersion within the fibre rather than an aggregate over it.
+the leak of Section~\ref{sec:map} by construction and is the only genomic score
+entitled to be called a protein-level proxy. It scores $-0.008$, and averaging
+log-ratios over the fibre instead of log-summing them --- a geometric mean of
+codon likelihoods, not a marginal --- gives $-0.019$. Both are nulls whose
+intervals contain zero, so nothing in Figure~\ref{fig:panels}(a) turns on the
+choice; Appendix~\ref{sec:codon} reports the $+0.011$ gap in full, because it is
+wider than a corpus contrast we went to the trouble of measuring.
 
 Evo~2 does clear zero, at $+0.266$ with an interval excluding it and positive on 23
 of 25 assays. It does not clear the substitution matrix: Evo~2 minus BLOSUM62 is
-$+0.0376$ with interval $[-0.012,+0.087]$, higher in 14 of 25. Against the fitted
+$+0.0376$ with interval $[-0.012,+0.087]$, higher in 14 of 25 assays and lower in
+11 (Figure~\ref{fig:spread}(a)). Against the fitted
 chemistry ridge it is behind, at $-0.0202$.
 
 \subsection{Scale is not the explanation}
@@ -536,20 +547,12 @@ as though it held for genomic models. Evo~2 refutes it.
 \section{The Checks Cost Less Than the Experiments}
 \label{sec:cost}
 
-Adoption is cheap, which is the argument for it.
-
-The noise ceiling is free: it is read off a masked pass already performed. The map
-controls cost one additional scoring pass per manipulation, so two passes over the
-evaluation set. Composition-matched twins cost one pass per shuffle seed per
-condition; we use two seeds and two shuffle orders. Trivial baselines cost
-negligible compute. Cluster-level statistics cost nothing but a join.
-
-For the Evo~2 context control specifically, scoring the 399-variant discrimination
-subset instead of all 7{,}882 variants is a twentyfold saving that changes no
-reported number, because the published AUCs are read off that subset already. The
-full control is 21 arms, 8{,}379 sequences and 41.9M tokens, against 167M for the
-original uncontrolled arms. A control that is cheaper than the experiment it checks
-has no compute excuse.
+The noise ceiling is read off a masked pass already performed, trivial baselines
+and cluster-level statistics are free, and each remaining check costs one extra
+scoring pass. The Evo~2 context control, the most expensive of them, is 41.9M
+tokens against 167M for the uncontrolled arms it corrects. A control cheaper
+than the experiment it checks has no compute excuse.
+Appendix~\ref{sec:costdetail} itemises them.
 
 \section{Conclusion}
 
@@ -659,6 +662,33 @@ larger ones. The specificity arm rests on one combinatorially complete landscape
 
 \clearpage
 \appendix
+
+\section{The Codon Marginalisation, in Full}
+\label{sec:codon}
+
+The two marginalisations of Section~\ref{sec:assays} differ by $+0.011$, which is
+wider than the $-0.0054$ corpus-diversity contrast of
+Figure~\ref{fig:panels}(c), and the two scores agree across assays at only
+$+0.59$. The sign of the gap is the same at all four sizes, from $+0.001$ to
+$+0.011$, but the paired change is not significant ($p=0.30$), so this is a
+defect in what a quantity was called and not a measured bias. The attenuation
+ceiling is unaffected, being a dispersion within the fibre rather than an
+aggregate over it.
+
+\section{The Cost of Each Check}
+\label{sec:costdetail}
+
+The noise ceiling is free: it is read off a masked pass already performed. The map
+controls cost one additional scoring pass per manipulation, so two passes over the
+evaluation set. Composition-matched twins cost one pass per shuffle seed per
+condition; we use two seeds and two shuffle orders. Trivial baselines cost
+negligible compute. Cluster-level statistics cost nothing but a join.
+
+For the Evo~2 context control specifically, scoring the 399-variant discrimination
+subset instead of all 7{,}882 variants is a twentyfold saving that changes no
+reported number, because the published AUCs are read off that subset already. The
+full control is 21 arms, 8{,}379 sequences and 41.9M tokens, against 167M for the
+original uncontrolled arms.
 
 \section{Full Result Tables}
 \label{app:tables}

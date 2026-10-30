@@ -41,13 +41,9 @@ def load():
         cl[r["dms_id"]] = r["cluster"] or "_".join(r["dms_id"].split("_")[:2])
     s["evo2"] = {r["dms_id"]: float(r["rho_evo2"])
                  for r in csv.DictReader((ROOT / "results/evo2_dms.csv").open())}
-    sweep = list(csv.DictReader((ROOT / "results/dms_scale_sweep.csv").open()))
-    panel = set(s["b62"])
-    nt = {}
-    for tag in ("50m", "100m", "250m", "500m"):
-        v = [float(r["rho_nt"]) for r in sweep
-             if f"-v2-{tag}-" in r["nt_model"] and r["dms_id"] in panel]
-        nt[tag] = np.array(v)
+    per_assay = sweep_by_assay(set(s["b62"]))
+    nt = {tag: np.array([per_assay[tag][i] for i in sorted(per_assay[tag])])
+          for tag in RUNGS}
     tok = defaultdict(dict)
     for r in csv.DictReader((ROOT / "results/stage0_tokenizer.csv").open()):
         tok["3mer" if "3mer" in r["nt_model"] else "6mer"][r["dms_id"]] = float(r["rho_nt"])
@@ -58,6 +54,25 @@ def load():
             for r in csv.DictReader((ROOT / "results/transfer_analysis.csv").open())
             if r["stage"] == "causal_control"}
     return s, cl, nt, tok, cor, ctrl
+
+
+RUNGS = ("50m", "100m", "250m", "500m")
+RUNG_PARAMS = (5e7, 1e8, 2.5e8, 5e8)
+
+
+def sweep_by_assay(panel):
+    """Per-assay rho at each NT-v2 rung, keyed by assay id.
+
+    load() needs only the mean per rung, but pairing a rung against another one
+    needs the assay identity, and the substring filter below is the one that a
+    bug once got wrong for weeks. It lives here, in the script that checks the
+    numbers, so a figure that pairs across rungs cannot apply a different filter
+    from the guard.
+    """
+    sweep = list(csv.DictReader((ROOT / "results/dms_scale_sweep.csv").open()))
+    return {tag: {r["dms_id"]: float(r["rho_nt"]) for r in sweep
+                  if f"-v2-{tag}-" in r["nt_model"] and r["dms_id"] in panel}
+            for tag in RUNGS}
 
 
 def codon_audit_spearman():

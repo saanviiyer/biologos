@@ -9,10 +9,19 @@ a figure and a sentence disagree after this runs, the sentence is wrong.
 
   python3 scripts/make_figures.py
 
-Writes paper/fig/panels.pdf, one full-width row of three panels. The paper is at
-the ACL eight-page content limit, and three single-column figures cost about 23
-more lines of column than one full-width row carrying the same three panels, so
-the layout is chosen for the page budget and not for taste.
+Writes two full-width figures. The paper is at the ACL eight-page content limit,
+and three single-column figures cost about 23 more lines of column than one
+full-width row carrying the same three panels, so the layout is chosen for the
+page budget and not for taste.
+
+  panels.pdf   aggregates: the bar, the scale trend, the matched contrasts
+  spread.pdf   the same two aggregates drawn per assay, because a mean over 25
+               assays hides whether the aggregate describes any of them
+
+spread.pdf exists because the headline contrast is a mean of +0.0376 that is
+positive on 14 of 25 assays, and the scale trend is a slope fitted through four
+means whose per-assay dispersion is an order of magnitude larger. Both facts are
+in the prose as counts; neither is visible until the points are drawn.
 """
 import sys
 from pathlib import Path
@@ -24,7 +33,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT))
 
 from analyze_stage0 import boot_mean, boot_paired, load as load_by_model  # noqa: E402
-from check_reported_numbers import load as load_panels  # noqa: E402
+from check_reported_numbers import (RUNGS, RUNG_PARAMS,  # noqa: E402
+                                    load as load_panels, sweep_by_assay)
 from biologos.validity import tcrit  # noqa: E402
 
 import matplotlib
@@ -182,6 +192,78 @@ def draw_contrasts(ax):
     return out
 
 
+def draw_paired_assays(ax, s, panel):
+    """Evo 2 against BLOSUM62, one point per assay, with the identity line.
+
+    The aggregate is a mean difference of +0.0376 whose interval contains zero.
+    Drawn per assay it is 25 points straddling y=x, which is what "higher on 14
+    of 25" looks like and is not what a bar chart of two means looks like.
+    """
+    x = np.array([s["b62"][i] for i in panel])
+    y = np.array([s["evo2"][i] for i in panel])
+    win = y > x
+    lim = (-0.13, 0.72)
+    ax.plot(lim, lim, color="black", lw=0.6, zorder=1)
+    ax.axhline(0, color=C_NULL, lw=0.5, ls=(0, (1, 2)), zorder=1)
+    ax.plot(x[win], y[win], "o", color=C_EVO, ms=3.6, mec="white", mew=0.5,
+            zorder=3, label=f"Evo 2 higher ({win.sum()})")
+    ax.plot(x[~win], y[~win], "o", color=C_NULL, ms=3.6, mec="white", mew=0.5,
+            zorder=3, label=f"BLOSUM62 higher ({(~win).sum()})")
+    m, lo, hi = boot_paired(y.tolist(), x.tolist())
+    ax.set_xlim(lim); ax.set_ylim(lim)
+    ax.set_aspect("equal")
+    ax.set_xticks([0.0, 0.2, 0.4, 0.6]); ax.set_yticks([0.0, 0.2, 0.4, 0.6])
+    ax.set_xlabel(r"BLOSUM62 $\rho$")
+    ax.set_ylabel(r"Evo 2 7B $\rho$", labelpad=1)
+    ax.text(0.03, 0.97, f"paired mean ${m:+.4f}$\n$[{lo:+.3f}, {hi:+.3f}]$",
+            transform=ax.transAxes, va="top", ha="left", fontsize=6.3,
+            color=C_EVO)
+    ax.legend(loc="lower right", frameon=False, handlelength=0.9,
+              borderpad=0.0, labelspacing=0.2, handletextpad=0.3)
+    ax.set_title("(a) the gap is not a property of the assays", fontsize=7.2,
+                 pad=4)
+    return m, lo, hi, int(win.sum()), len(panel)
+
+
+def draw_assay_ladder(ax, panel):
+    """The scale ladder per assay, under the mean the slope was fitted to.
+
+    The fitted trend is +0.0207 per decade. The per-assay spread at any one rung
+    is wider than the whole range the trend covers, so the figure shows the
+    slope and the reason not to read it as a per-assay prediction at once.
+    """
+    per = sweep_by_assay(set(panel))
+    ids = sorted(set.intersection(*[set(per[t]) for t in RUNGS]))
+    x = np.log10(RUNG_PARAMS)
+    for i in ids:
+        ax.plot(x, [per[t][i] for t in RUNGS], color=C_NULL, lw=0.5, alpha=0.55,
+                zorder=2, solid_capstyle="round")
+    y = np.array([np.mean([per[t][i] for i in ids]) for t in RUNGS])
+    ci = np.array([boot_mean([per[t][i] for i in ids])[1:] for t in RUNGS])
+    slope, icept = np.polyfit(x, y, 1)
+    ax.plot(x, slope * x + icept, color=C_MODEL, lw=0.8, ls=(0, (4, 2)),
+            zorder=4, label=f"trend, ${slope:+.4f}$/decade")
+    ax.errorbar(x, y, yerr=[y - ci[:, 0], ci[:, 1] - y], fmt="o", color=C_MODEL,
+                ms=3.6, lw=1.2, capsize=1.6, zorder=5, mec="white", mew=0.5,
+                label=f"mean, {len(ids)} assays")
+    ax.axhline(0, color="black", lw=0.5, zorder=1)
+    ax.plot([], [], color=C_NULL, lw=0.5, alpha=0.55, label="one assay")
+    spread = max(np.ptp([per[t][i] for i in ids]) for t in RUNGS)
+    ax.annotate(f"widest rung spans ${spread:.2f}$,\nthe trend covers "
+                f"${abs(slope) * (x[-1] - x[0]):.3f}$",
+                (x[-1], y[-1]), textcoords="offset points", xytext=(-2, 26),
+                ha="right", va="center", fontsize=6.3, color=C_MODEL)
+    ax.set_xlabel("parameters")
+    ax.set_ylabel(r"$\rho$", labelpad=1)
+    ax.set_xticks(x)
+    ax.set_xticklabels([t.upper() for t in RUNGS])
+    ax.legend(loc="lower left", frameon=False, handlelength=1.4, ncol=3,
+              borderpad=0.0, labelspacing=0.2, handletextpad=0.4,
+              columnspacing=0.8)
+    ax.set_title("(b) every assay, not the mean of them", fontsize=7.2, pad=4)
+    return slope, spread, len(ids)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     s, cl, nt, tok, cor, ctrl = load_panels()
@@ -195,6 +277,14 @@ def main():
     fig.subplots_adjust(wspace=0.78)
     fig.savefig(OUT / "panels.pdf")
     plt.close(fig)
+
+    fig2, ax2 = plt.subplots(1, 2, figsize=(TEXTW, 2.35),
+                             gridspec_kw={"width_ratios": [1.0, 1.22]})
+    paired = draw_paired_assays(ax2[0], s, panel)
+    ladder = draw_assay_ladder(ax2[1], panel)
+    fig2.subplots_adjust(wspace=0.30)
+    fig2.savefig(OUT / "spread.pdf")
+    plt.close(fig2)
 
     pred = slope * np.log10(7e9) + icept
     print(f"panel: {len(panel)} assays -> {OUT / 'panels.pdf'}\n")
@@ -210,6 +300,13 @@ def main():
         print(f"      {lab:<22s} {m:+.4f}  boot [{lo:+.4f}, {hi:+.4f}]  "
               f"t [{tlo:+.4f}, {thi:+.4f}]  n={n}"
               f"{'' if agree else '   <- estimators DISAGREE on zero'}")
+    pm, plo, phi, wins, npan = paired
+    lslope, spread, nlad = ladder
+    print(f"\nspread: {OUT / 'spread.pdf'}")
+    print(f"      (a) Evo 2 - BLOSUM62 {pm:+.4f} [{plo:+.4f}, {phi:+.4f}], "
+          f"Evo 2 higher on {wins} of {npan}")
+    print(f"      (b) slope {lslope:+.4f}/decade over {nlad} assays, "
+          f"widest rung spans {spread:.3f}")
 
 
 if __name__ == "__main__":
