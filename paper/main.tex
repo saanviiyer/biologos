@@ -169,7 +169,8 @@ variance. Our variant obtains the ceiling from model-internal invariance violati
 and not from experimental replicates, which makes it available when replicates
 are not.
 
-\section{Four Controls}
+\section{What a Transfer Claim Must Survive}
+\label{sec:controls}
 
 Let $f$ be a model scoring inputs in representation $A$, and let a claim assert
 that $f$ captures property $P$ defined on modality $B$, related to $A$ by a known
@@ -304,7 +305,7 @@ Tables~\ref{tab:main} and~\ref{tab:free}.}
 \label{fig:panels}
 \end{figure*}
 
-\subsection{What the controls remove}
+\subsection{Most of the transfer disappears}
 
 \paragraph{The transfer claim does not survive its map control.} A linear probe on
 mean-pooled genomic embeddings, trained and evaluated within background groups so
@@ -512,7 +513,7 @@ named breadth as the contrast whose outcome would change our recommendation. Had
 read only the bootstrap column, we would now be reporting that it showed a gradient
 and reopening a compute argument on the strength of $0.0011$.
 
-\section{Four Claims the Controls Overturned}
+\section{Four Claims That Were False}
 \label{sec:retract}
 
 \textbf{A reading-frame result was retracted.} A genomic model appeared unable to
@@ -532,7 +533,7 @@ as Table~\ref{tab:map} shows.
 protein-fitness signal'' held for the Nucleotide Transformer family and was written
 as though it held for genomic models. Evo~2 refutes it.
 
-\section{What the Controls Cost}
+\section{The Checks Cost Less Than the Experiments}
 \label{sec:cost}
 
 Adoption is cheap, which is the argument for it.
@@ -552,18 +553,25 @@ has no compute excuse.
 
 \section{Conclusion}
 
-Nothing in the controls' statement is specific to biology. Any claim that a
+Most of the reported genomic-to-protein transfer is not transfer. A probe on
+genomic embeddings scores as well on sequence whose reading frame has been
+destroyed as on real genes; the Nucleotide Transformer family is null at every
+size we could run, and its one monotone trend belongs to a scoring convention
+rather than to the family; a context dose-response was composition in both
+directions. What survives is a single positive result that a substitution matrix
+already matches: Evo~2 transfers at $+0.266$ against BLOSUM62's $+0.228$, and the
+paired gap of $+0.0376$ has an interval containing zero. Four claims fell, three of them ours, and none of
+the three factors we can vary at matched architecture explains what is left.
+
+Nothing in the four checks is specific to biology. Any claim that a
 representation encodes a property of another modality related to it by a known
 map can in principle be checked by destroying the map, by bounding attenuation
 from within-fibre variance, and by matching a context manipulation on
 composition --- in principle, because we have tested this in one domain, and the
 hard step outside it is constructing a map-destroying manipulation when the map
 is not exact. Biology is where the map is known exactly, which makes it the
-setting where the controls are exactly constructible and their consequences
-visible. Here they removed four claims, three of them ours, and left a smaller
-result standing: genomic-to-protein transfer exists at Evo~2 scale and does not
-clear a substitution matrix, and the three factors we can vary at matched
-architecture do not explain it.
+setting where these checks are exactly constructible and their consequences
+visible.
 
 A reviewer entitled to ask what would change our mind had a short answer in an
 earlier version of this paper: cross-species corpus breadth, at the cost of one
