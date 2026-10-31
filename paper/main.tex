@@ -452,6 +452,30 @@ the line we can reject the scaling account but cannot identify which of
 architecture, corpus or token budget is responsible, because none of these is a
 variable we control. The Limitations section says what would.
 
+\subsection{The nulls are not contamination}
+\label{sec:membership}
+
+An audit of an earlier draft objected that the assay coding sequences are
+database-canonical genes, plausibly verbatim substrings of NT-v2's 850-genome
+corpus, so a gene and its rotations would both be training text and the
+reading-frame null of Section~\ref{sec:map} would follow from memorisation alone.
+That corpus is a known finite set of genomes, so membership can be checked rather
+than argued. We reconstruct masked spans in 27{,}787 trials over 720 windows of 3{,}000~nt,
+drawn from 11 genomes verified present in the corpus and 13 released after its
+training finished, with the window pools matched on GC in 1\% bins to $0.5763$
+against $0.5768$. Member genomes are reconstructed no better than non-members:
+per-nucleotide accuracy differs by $-0.0077$ ($p=0.647$), with the point estimate
+running the wrong way. The sensitive attack agrees. Separating member from
+non-member windows by mean $\log p(\text{true})$ gives AUC between $0.494$ and
+$0.540$ across six span lengths, which is chance. Exact span recovery is zero
+beyond a single token in every arm. The chromosome used throughout this paper is
+not a corpus member. Memorisation is not what produced the nulls.
+
+At 500M the same attack appears to succeed, at AUC $0.664$, and the apparent
+signal lives entirely in a comparison whose GC matching failed by five points:
+Appendix~\ref{sec:mem500} has it. We do not claim memorisation is excluded at
+500M, only that there is no composition-free evidence for it.
+
 \subsection{Architecture and corpus, measured from released checkpoints}
 \label{sec:stage0}
 
@@ -462,29 +486,27 @@ matched architecture, for inference cost only. We ran all three. The token budge
 not among them, and the Limitations section says why no number of
 released checkpoints can supply it.
 
-\paragraph{Codon-aligned tokenization does not help.} The v2 family ships a 3-mer
-variant that is otherwise identical to the 6-mer 50M model: 512 hidden, 12 layers,
-16 heads, the same 850-genome corpus, vocabulary 4107 against 75. Because a 3-mer
-token is exactly a codon, the masked token \emph{is} the codon under test and the
+Each pair below is identical in every dimension but one; Table~\ref{tab:hyper}
+gives the dimensions.
+
+\paragraph{Codon-aligned tokenization does not help.} A 3-mer token is exactly a
+codon, so the masked token \emph{is} the codon under test and the
 neighbouring-codon conditioning the 6-mer scorer carries disappears.
-\citet{boshar2024glm} trained this model because codon-level resolution was where
+\citet{boshar2024glm} trained this variant because codon-level resolution was where
 genomic models lost to protein models under fine-tuning, and reported that it
 improved their two codon-sensitive tasks. It had not been scored zero-shot.
 
-\paragraph{Within-species corpus diversity does not help.} The v1 family supplies
-\texttt{500m-human-ref} and \texttt{500m-1000g}, identical at 1280 hidden, 24 layers
-and 20 heads, differing only in training on one human reference genome against 3,202
-genetically diverse human genomes.
+\paragraph{Within-species corpus diversity does not help.} \texttt{500m-human-ref}
+against \texttt{500m-1000g}: one human reference genome against 3,202 genetically
+diverse ones.
 
-\paragraph{Cross-species corpus breadth does not help either.} The v1 family also
-supplies \texttt{2.5b-1000g} and \texttt{2.5b-multi-species}, identical at 2560
-hidden, 32 layers and 20 heads, differing in whether the training corpus is human or
-spans 850 species. This is the most informative of the three contrasts, because
-Evo~2 trains across all domains of life and cross-species range was the most
-plausible surviving account of its margin. It is also the contrast on which our own
-conclusion was staked: an earlier version of this paper reported it as unrun and said
-explicitly that a gradient here would change the recommendation we now
-make in the Limitations section.
+\paragraph{Cross-species corpus breadth does not help either.}
+\texttt{2.5b-1000g} against \texttt{2.5b-multi-species}: human against 850 species.
+This is the most informative of the three, because Evo~2 trains across all domains
+of life and cross-species range was the most plausible surviving account of its
+margin. It is also the contrast on which our own conclusion was staked: an earlier
+version of this paper reported it as unrun and said explicitly that a gradient here
+would change the recommendation we now make in the Limitations section.
 
 Figure~\ref{fig:panels}(c) reports all three. No factor moves the result past the bar.
 Codon-aligned tokenization, 3-mer minus 6-mer, gives $-0.0156$ $[-0.043,+0.012]$,
@@ -674,6 +696,23 @@ $+0.011$, but the paired change is not significant ($p=0.30$), so this is a
 defect in what a quantity was called and not a measured bias. The attenuation
 ceiling is unaffected, being a dispersion within the fibre rather than an
 aggregate over it.
+
+\section{The 500M Membership Arm}
+\label{sec:mem500}
+
+At 500M the membership attack of Section~\ref{sec:membership} returns AUC $0.664$
+rather than the $0.494$ to $0.540$ it returns at 50M. Its two pools differ by five
+points of GC, $0.603$ against $0.553$, despite carrying the matched label in the
+analysis output, and genomic models are strongly composition-sensitive. The
+genus-matched comparison, where composition does hold, returns AUC $0.462$ and
+per-nucleotide differences of $-0.0097$ and $+0.0028$: the member genome is no
+better than its non-member relatives. A signal that appears only in the comparison
+whose matching failed, and vanishes where it holds, is the artifact of
+Sections~\ref{sec:map} and~\ref{sec:context} a fourth time, found here in a control
+of our own rather than in a published claim. It is not evidence of memorisation,
+and it does not exclude it either: the matched comparison rests on a single member
+genome and 40 windows per arm, which is too thin to rule out a moderate effect.
+Closing the question needs a properly matched pool at 500M, not a larger model.
 
 \section{The Cost of Each Check}
 \label{sec:costdetail}

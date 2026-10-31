@@ -99,6 +99,49 @@ def codon_audit_spearman():
     return out
 
 
+def memorisation():
+    """Membership-test quantities, recomputed through the analysis script itself.
+
+    The Markov-margin figures of FINDINGS.md 32 and 36 are deliberately NOT
+    checked here and are not quoted in the paper: they need
+    results/memorisation_dna_baselines.csv, which is not in the repository, so
+    analyze_memorisation_dna.py reports them as nan and nothing can confirm
+    them. Only the membership comparison, which needs no baseline file, is
+    canonical.
+    """
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from analyze_memorisation_dna import load, by, perm_genomes, auc
+
+    out = {}
+    for tag, f in (("50m", "results/memorisation_dna_nt50m.csv"),
+                   ("500m", "results/memorisation_dna_nt500m.csv")):
+        rows = [r for r in load(ROOT / f) if r["placement"] == "random"]
+        mem, non = by(rows, arm="member"), by(rows, arm="nonmember")
+        out[tag + "_gc_mem"] = np.mean([r["gc"] for r in mem])
+        out[tag + "_gc_non"] = np.mean([r["gc"] for r in non])
+        out[tag + "_diff"] = perm_genomes(by(mem, L=1), by(non, L=1), "nt_acc")[0]
+        # The attack separates WINDOWS, not spans: a window contributes one
+        # mean log p(true), as in analyze_memorisation_dna.py section 4.
+        def win(rs):
+            d = defaultdict(list)
+            for r in rs:
+                d[r["wid"]].append(r["logp_true"])
+            return np.array([np.mean(v) for v in d.values()])
+
+        aucs = [auc(win(by(mem, L=L)), win(by(non, L=L)))
+                for L in (1, 2, 5, 10, 20, 40)]
+        out[tag + "_auc_lo"], out[tag + "_auc_hi"] = min(aucs), max(aucs)
+        out[tag + "_auc_l1"] = aucs[0]
+        gm, gn = by(rows, arm="meso_member", L=1), by(rows, arm="meso_non", L=1)
+        out[tag + "_genus_auc"] = auc(win(gm), win(gn))
+    # Exact span recovery past one token, every arm, both runs.
+    out["exact_beyond_l1"] = max(
+        r["exact"] for f in ("results/memorisation_dna_nt50m.csv",
+                             "results/memorisation_dna_nt500m.csv")
+        for r in load(ROOT / f) if r["L"] > 1)
+    return out
+
+
 def paired(a, b):
     k = sorted(set(a) & set(b))
     return np.array([a[i] - b[i] for i in k])
@@ -107,6 +150,7 @@ def paired(a, b):
 def main():
     s, cl, nt, tok, cor, ctrl = load()
     aud = codon_audit_spearman()
+    mem = memorisation()
     panel = sorted(set(s["b62"]) & set(s["evo2"]))
     x = np.log10([5e7, 1e8, 2.5e8, 5e8])
     y = np.array([nt[t].mean() for t in ("50m", "100m", "250m", "500m")])
@@ -131,6 +175,13 @@ def main():
         ("params to reach BLOSUM62",  (b62 - icept) / slope,    "19.5"),
         ("scaling Spearman, pref",    aud["rho_pref"],          "+1.000"),
         ("scaling Spearman, marginal", aud["rho_lse_sym"],      "+0.800"),
+        ("membership diff, 50M",      mem["50m_diff"],          "-0.0077"),
+        ("membership AUC floor, 50M", mem["50m_auc_lo"],        "0.494"),
+        ("membership AUC peak, 50M",  mem["50m_auc_hi"],        "0.540"),
+        ("membership AUC, 500M",      mem["500m_auc_l1"],       "0.664"),
+        ("genus-matched AUC, 500M",   mem["500m_genus_auc"],    "0.462"),
+        ("500M member pool GC",       mem["500m_gc_mem"],       "0.603"),
+        ("500M non-member pool GC",   mem["500m_gc_non"],       "0.553"),
         ("map control, canonical",    ctrl.get("canonical", float("nan")),    "+0.141"),
         ("map control, frameshift",   ctrl.get("frameshift+1", float("nan")), "+0.143"),
         ("map control, revcomp",      ctrl.get("reverse_complement", float("nan")), "+0.129"),
