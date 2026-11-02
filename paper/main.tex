@@ -28,13 +28,11 @@ is measured against therefore decides it. DNA and protein are two encodings of o
 molecule related by an exactly known map, which makes biological sequence models a
 sharp setting for a question the rest of machine learning can only ask loosely: when a model trained on one
 representation appears to know something about another, is that transfer, or an
-artifact of how the question was posed? We give four controls that decide it ---
-a noise ceiling read off the model's own violation of an invariance it should
-respect, manipulations that destroy the representation map while preserving
-surface statistics, composition-matched context twins, and trivial baselines
-under correlated-unit accounting. Each is stated against a precondition rather
-than against biology, though we demonstrate them only in biology. Applying them
-overturns four claims, three of them our own: a genomic representation read as
+artifact of how the question was posed? Four controls decide it: a noise ceiling read off the
+model's own violation of an invariance it should respect, manipulations that
+destroy the representation map while preserving surface statistics,
+composition-matched context twins, and trivial baselines under correlated-unit
+accounting. They overturn four claims, three of them our own: a genomic representation read as
 weak transfer at $\rho=+0.141$ scores $+0.143$ once its reading frame is
 destroyed, and a context dose-response is reproduced by flanks carrying no
 genomic information. Across 25 deep mutational scanning assays in 9 organisms no
@@ -426,55 +424,59 @@ The Nucleotide Transformer is flat in level across four sizes but not in order,
 and the distinction decides what the extrapolation below is worth. The four means
 run from $-0.0132$ at 50M to $+0.0083$ at 500M and every one of their intervals
 contains zero, so no size in the family carries protein-fitness signal. They are
-nonetheless monotone in parameter count, Spearman $+1.000$. That ordering belongs
-to this score and not to the family: under either marginalisation of the preceding
-paragraph the 100M rung falls below the 50M one and the coefficient drops to
-$+0.800$. The trend we fit below is therefore the most favourable of the three
-orderings available, which is the spirit in which it is offered.
+nonetheless monotone in parameter count, Spearman $+1.000$ --- an ordering that
+belongs to this score rather than to the family, since under either
+marginalisation the coefficient drops to $+0.800$ (Appendix~\ref{sec:codon}). The
+trend below is therefore the most favourable of the three orderings available.
 
-Figure~\ref{fig:panels}(b) shows the ladder. We fit a trend to
-grant the scaling account its best case, not because these data
-establish one. Regressing $\rho$ on $\log_{10} N$ gives a slope of $+0.0207$ per
+Figure~\ref{fig:panels}(b) shows the ladder. The trend below grants the scaling
+account its best case rather than establishing one. Regressing $\rho$ on $\log_{10} N$ gives a slope of $+0.0207$ per
 decade and an intercept of $-0.1762$; on four points that slope carries a standard
 error of $0.0069$ and is not significant, at $p=0.083$ by exact permutation over
 all $24$ orderings of the four means, where the attainable floor is $2/24=0.083$. Extrapolated, the trend
 predicts $+0.0281$ at 7B parameters against Evo~2's measured $+0.2658$, short by a
-factor of $9.5$, and reaching BLOSUM62 along it would require $10^{19.5}$
-parameters. That second figure is what happens when a trend fitted inside the noise
-is extended eleven orders of magnitude, and is quoted to show the absurdity rather
-than as an estimate. The first is better read as a lower bound on the gap: even on
-the most generous reading of this family's trajectory, scale does not reach Evo~2.
+factor of $9.5$; reaching BLOSUM62 along it would take $10^{19.5}$ parameters, a
+figure quoted to show what extending a trend fitted inside the noise eleven orders
+of magnitude produces, not as an estimate. The factor of $9.5$ is better read as a
+lower bound: even on the most generous reading of this family's trajectory, scale
+does not reach Evo~2.
 
-Evo~2 therefore sits far off the line that scaling its family would trace. Whatever
-produces its protein-fitness signal is a property of architecture and corpus, and
-scale alone does not buy it. We note the limitation squarely: with one point off
-the line we can reject the scaling account but cannot identify which of
-architecture, corpus or token budget is responsible, because none of these is a
-variable we control. The Limitations section says what would.
+Whatever produces Evo~2's signal is therefore a property of architecture and
+corpus, and scale alone does not buy it. With one point off the line we can reject
+the scaling account but not say which of architecture, corpus or token budget
+replaces it, none being a variable we control.
 
 \subsection{The nulls are not contamination}
 \label{sec:membership}
 
-An audit of an earlier draft objected that the assay coding sequences are
-database-canonical genes, plausibly verbatim substrings of NT-v2's 850-genome
-corpus, so a gene and its rotations would both be training text and the
-reading-frame null of Section~\ref{sec:map} would follow from memorisation alone.
-That corpus is a known finite set of genomes, so membership can be checked rather
-than argued. We reconstruct masked spans in 27{,}787 trials over 720 windows of 3{,}000~nt,
+An audit objected that the assay coding sequences are database-canonical genes,
+plausibly verbatim substrings of NT-v2's 850-genome corpus, so a gene and its
+rotations would both be training text and the reading-frame null of
+Section~\ref{sec:map} would follow from memorisation alone. That corpus is a known
+finite set, so membership can be checked rather than argued. We reconstruct masked spans in 27{,}787 trials over 720 windows of 3{,}000~nt,
 drawn from 11 genomes verified present in the corpus and 13 released after its
 training finished, with the window pools matched on GC in 1\% bins to $0.5763$
 against $0.5768$. Member genomes are reconstructed no better than non-members:
-per-nucleotide accuracy differs by $-0.0077$ ($p=0.647$), with the point estimate
-running the wrong way. The sensitive attack agrees. Separating member from
-non-member windows by mean $\log p(\text{true})$ gives AUC between $0.494$ and
-$0.540$ across six span lengths, which is chance. Exact span recovery is zero
-beyond a single token in every arm. The chromosome used throughout this paper is
-not a corpus member. Memorisation is not what produced the nulls.
+per-nucleotide accuracy differs by $-0.0077$ ($p=0.647$), the point estimate
+running the wrong way. Separating member from non-member windows by mean
+$\log p(\text{true})$, the sensitive attack, gives AUC between $0.494$ and $0.540$
+across six span lengths, which is chance, and exact span recovery is zero beyond a
+single token in every arm. The chromosome used throughout this paper is not a
+corpus member. Memorisation is not what produced the nulls.
 
-At 500M the same attack appears to succeed, at AUC $0.664$, and the apparent
-signal lives entirely in a comparison whose GC matching failed by five points:
-Appendix~\ref{sec:mem500} has it. We do not claim memorisation is excluded at
-500M, only that there is no composition-free evidence for it.
+\paragraph{What the nulls are, then.} The same reconstructions say what the
+transfer experiment cannot. On its own pretraining objective NT-v2 50M reaches
+$0.3327$ per-nucleotide accuracy, against $0.3150$ for an order-5 Markov chain
+fitted to the source genome and $0.3186$ for emitting the window's commonest base:
+a margin of $+0.018$ over a 5-mer lookup is the whole of what its pretraining
+bought. That such a model carries no protein-fitness signal is the expected result,
+not a surprising one. At 500M the margin is $+0.1285$, so this is a statement about
+the rung at which most of the nulls above were measured, not about the family.
+
+At 500M the attack appears to succeed at AUC $0.664$, but the signal lives
+entirely in a comparison whose GC matching failed by five points
+(Appendix~\ref{sec:mem500}). We do not claim memorisation is excluded there, only
+that there is no composition-free evidence for it.
 
 \subsection{Architecture and corpus, measured from released checkpoints}
 \label{sec:stage0}
@@ -551,11 +553,10 @@ and reopening a compute argument on the strength of $0.0011$.
 
 \textbf{A reading-frame result was retracted.} A genomic model appeared unable to
 distinguish a gene from the same gene read one nucleotide out of frame. The
-``frameshift'' is a rotation, so apart from one wrap junction it is real genomic
-sequence. Ranking the four conditions by whether they yield a real genomic string
-reproduces the entire table with no appeal to reading frame. The replacement probe,
-calibrated against a 3-periodic Markov positive control, is underpowered and not
-null: bounding it needs about 214 unique coding sequences and 24 are available.
+``frameshift'' is a rotation, so ranking the four conditions by whether they yield
+a real genomic string reproduces the entire table without appealing to reading
+frame. The replacement probe is underpowered rather than null: bounding it needs
+about 214 unique coding sequences and 24 are available.
 
 \textbf{A representation-level transfer claim was falsified by its own control},
 as Table~\ref{tab:map} shows.
@@ -570,11 +571,10 @@ as though it held for genomic models. Evo~2 refutes it.
 \label{sec:cost}
 
 The noise ceiling is read off a masked pass already performed, trivial baselines
-and cluster-level statistics are free, and each remaining check costs one extra
-scoring pass. The Evo~2 context control, the most expensive of them, is 41.9M
-tokens against 167M for the uncontrolled arms it corrects. A control cheaper
-than the experiment it checks has no compute excuse.
-Appendix~\ref{sec:costdetail} itemises them.
+and cluster statistics are free, and each remaining check costs one extra scoring
+pass. The most expensive, the Evo~2 context control, is 41.9M tokens against 167M
+for the uncontrolled arms it corrects. A control cheaper than the experiment it
+checks has no compute excuse; Appendix~\ref{sec:costdetail} itemises them.
 
 \section{Conclusion}
 
