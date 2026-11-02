@@ -102,20 +102,27 @@ def codon_audit_spearman():
 def memorisation():
     """Membership-test quantities, recomputed through the analysis script itself.
 
-    The Markov-margin figures of FINDINGS.md 32 and 36 are deliberately NOT
-    checked here and are not quoted in the paper: they need
-    results/memorisation_dna_baselines.csv, which is not in the repository, so
-    analyze_memorisation_dna.py reports them as nan and nothing can confirm
-    them. Only the membership comparison, which needs no baseline file, is
-    canonical.
+    The Markov and composition margins need
+    results/memorisation_dna_baselines.csv, which was missing until it was
+    rebuilt by scripts/make_memorisation_baselines.py from the genomes and the
+    recorded window offsets. They are checked here so it cannot go missing
+    again unnoticed. mk5_nt is the self-feeding fill, which is the column that
+    reproduces the figure FINDINGS.md 32 reported; the teacher-forced variant
+    sits beside it in the file and is a different, more generous quantity.
     """
     sys.path.insert(0, str(ROOT / "scripts"))
     from analyze_memorisation_dna import load, by, perm_genomes, auc
 
     out = {}
+    base = ROOT / "results/memorisation_dna_baselines.csv"
     for tag, f in (("50m", "results/memorisation_dna_nt50m.csv"),
                    ("500m", "results/memorisation_dna_nt500m.csv")):
-        rows = [r for r in load(ROOT / f) if r["placement"] == "random"]
+        rows = [r for r in load(ROOT / f, base) if r["placement"] == "random"]
+        # The margin over a 5-mer lookup, on the member arm at one token: what
+        # the model's own pretraining objective is worth above a trivial one.
+        m1 = by(rows, arm="member", L=1)
+        out[tag + "_mk5_margin"] = (np.mean([r["nt_acc"] for r in m1])
+                                    - np.nanmean([r["mk5_nt"] for r in m1]))
         mem, non = by(rows, arm="member"), by(rows, arm="nonmember")
         out[tag + "_gc_mem"] = np.mean([r["gc"] for r in mem])
         out[tag + "_gc_non"] = np.mean([r["gc"] for r in non])
@@ -175,6 +182,8 @@ def main():
         ("params to reach BLOSUM62",  (b62 - icept) / slope,    "19.5"),
         ("scaling Spearman, pref",    aud["rho_pref"],          "+1.000"),
         ("scaling Spearman, marginal", aud["rho_lse_sym"],      "+0.800"),
+        ("margin over order-5, 50M",  mem["50m_mk5_margin"],    "+0.018"),
+        ("margin over order-5, 500M", mem["500m_mk5_margin"],   "+0.1285"),
         ("membership diff, 50M",      mem["50m_diff"],          "-0.0077"),
         ("membership AUC floor, 50M", mem["50m_auc_lo"],        "0.494"),
         ("membership AUC peak, 50M",  mem["50m_auc_hi"],        "0.540"),

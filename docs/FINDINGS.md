@@ -976,6 +976,21 @@ Exact span recovery is approximately zero at every length beyond a single token,
 every arm, so there is no verbatim recall either, matching section 28's protein
 result.
 
+**Reproducibility, 1 Nov 2026.** `results/memorisation_dna_baselines.csv` was
+absent from this repository, so every Markov and composition figure in this
+section and in section 36, and every ratio-corrected AUC, came back as `nan`
+and could not be confirmed. It has been rebuilt by
+`scripts/make_memorisation_baselines.py` from the genomes
+(`scripts/fetch_memdna_genomes.py`) and the window offsets recorded in the
+reconstruction CSVs; all 480 windows reproduce their recorded GC exactly. The
+claims above survive: the 50M margin recomputes to +0.0178 against the +0.018
+reported, and the ratio-corrected AUCs to 0.520 to 0.552. Two values were
+corrected: the 500M margin from +0.131 to +0.1285, and the genus-matched
+corrected AUC from 0.509 to 0.506. Both margins are now checked by
+`scripts/check_reported_numbers.py`. Note that `mk5_nt` is the self-feeding
+fill; fed the true preceding bases instead, an order-5 chain reaches 0.376 and
+beats NT-v2 50M outright, which is a different and more generous comparison.
+
 ### The number that reframes sections 30 and 31
 
 | scorer | per-nt accuracy |
@@ -1210,8 +1225,8 @@ analysed here (`results/memorisation_dna_nt500m.csv`, 11,947 reconstructions ove
 
 | model | per-nt accuracy, L=1 | margin over an order-5 Markov chain |
 |---|---|---|
-| NT-v2 50M | 0.3244 | **+0.018** |
-| NT-v2 500M | 0.4372 | **+0.131** |
+| NT-v2 50M | 0.3244 | **+0.0178** |
+| NT-v2 500M | 0.4372 | **+0.1285** |
 
 The 500M model beats a 5-mer lookup by **seven times** the margin the 50M model
 manages. Section 32's line that a genomic model "barely beats an order-5 Markov

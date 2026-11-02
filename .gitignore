@@ -13,3 +13,6 @@ paper/main.log
 paper/main.out
 paper/main.pdf
 paper/main.xdv
+
+# Re-fetchable from accessions by scripts/fetch_memdna_genomes.py
+data/genomes/
