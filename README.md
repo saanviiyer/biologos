@@ -170,7 +170,11 @@ missing model, not a version skew.
 
 Point `PROTEINGYM_DIR` at a local ProteinGym checkout holding `reference.csv` and
 an `assays/` directory of per-assay CSVs. It defaults to `data/proteingym`, which
-is not vendored. Per-assay Evo 2 correlations ship in `results/evo2_dms.csv`, so
+is not vendored. Two other third-party inputs are likewise not vendored and are
+needed only by the arms that use them: SKEMPI 2.0 at `data/skempi/skempi_v2.csv`,
+and the genomes the memorisation arm scored, which
+`scripts/fetch_memdna_genomes.py` re-fetches into `data/genomes/` from the
+accessions recorded in the result files. Per-assay Evo 2 correlations ship in `results/evo2_dms.csv`, so
 the scaling analysis runs with no GPU and no download.
 
 ```bash
