@@ -55,7 +55,12 @@ statistics. Similar claims are made for multimodal encoders, for code models
 reasoning about natural language, for cross-lingual transfer, where whether a
 multilingual model shares structure or merely shares vocabulary was contested for
 several years, and for any system said to have acquired a capability it was not
-trained on.
+trained on. In its strongest general form the claim is that
+representations converge across modalities toward a shared model of the underlying
+reality \citep{huh2024platonic}. Biological sequence models are its sharpest test:
+DNA and protein are not correlated observations of an inferred reality but two
+encodings of one molecule under an exact map, so if representations converge
+anywhere they must converge here.
 
 These claims are hard to check because the representations are not independent.
 Under any encoding rule the codon determines the amino acid, so the nucleotides at
@@ -111,55 +116,53 @@ them should see what it costs not to have had them.
 
 \paragraph{Protein and genomic language models.} ESM-2 \citep{lin2023esm2} and
 ESM-C established masked protein language models as zero-shot variant-effect
-predictors, evaluated at scale by ProteinGym \citep{notin2023proteingym}. On the
-nucleotide side, the Nucleotide Transformer \citep{dalla2024nucleotide}, HyenaDNA
-\citep{nguyen2023hyenadna} and Evo~2 \citep{brixi2025evo2} model genomes directly.
-Evo and Evo~2 have been used to design functional sequences
-\citep{merchant2025evo,king2026phage}, though in the latter case through
-inference-time guidance from separate predictive models and not bare likelihood
-ranking.
+predictors, evaluated at scale by ProteinGym \citep{notin2023proteingym}; the
+Nucleotide Transformer \citep{dalla2024nucleotide}, HyenaDNA
+\citep{nguyen2023hyenadna} and Evo~2 \citep{brixi2025evo2} model genomes directly,
+and Evo~2 has been used to design functional sequences
+\citep{merchant2025evo,king2026phage}, there through inference-time guidance from
+separate predictors rather than bare likelihood ranking.
 
 \paragraph{Genomic models on protein tasks.} \citet{boshar2024glm} ask our question
 directly and reach an apparently opposite answer: under supervised fine-tuning on
 five protein tasks, Nucleotide Transformer v2 500M matches or outperforms ESM-2 on
 three of them. They attribute the two losses to tasks needing codon-level
-resolution and train a 3-mer variant to address it, which improves those two tasks
-and leaves the rest unchanged. Their protocol differs from ours in the way that
-matters: they fine-tune, we score zero-shot likelihood; they use no
-non-model baseline, no map-destroying control and no noise ceiling; and they do not
-evaluate zero-shot variant effect on deep mutational scans. Section~\ref{sec:tension}
+resolution and train a 3-mer variant that improves those two and leaves the rest
+unchanged. Their protocol differs where it matters: they fine-tune and we score
+zero-shot likelihood, and they use no non-model baseline, no map-destroying
+control and no noise ceiling. Section~\ref{sec:tension}
 argues that the two results are consistent and that the difference is diagnostic,
 since a fine-tuned readout can recover residue identity from nucleotides through the
 codon channel of Section~\ref{sec:map} while a likelihood cannot.
 
-\paragraph{Evaluation critiques.} Our position follows a line of work showing that
-benchmark gains often survive removal of the mechanism they are credited to
-\citep{rendle2019difficulty,musgrave2020metric}. The specific concern that strong
-scores reflect data leakage through a known map, and not learned structure, is
-familiar from natural language inference artifacts \citep{gururangan2018annotation}.
-We contribute the observation that biology supplies an exactly known map and
-therefore exactly constructible controls, which natural language does not.
+\paragraph{Evaluation critiques.} Our position follows work showing benchmark
+gains often survive removal of the mechanism they are credited to
+\citep{rendle2019difficulty,musgrave2020metric}, and the concern that strong scores
+reflect leakage through a known map rather than learned structure is familiar from
+inference artifacts \citep{gururangan2018annotation}. The same comparison underwrites the claim that
+representations converge across modalities toward a shared model of reality
+\citep{huh2024platonic}, whose evidence \citet{koepke2026cave} find fragile under
+dataset scale. We contribute that biology supplies an exact map and therefore
+exactly constructible controls, and that a map-destroying manipulation is a
+sharper test than a random one.
 
 \paragraph{Cross-lingual transfer.} Three of our controls answer questions already
 asked of multilingual models, where our construction is unavailable. Whether
-measured transfer reflects shared structure or mere lexical overlap was tested by
-removing the overlap from training, and the answer was that overlap is not the
-mechanism \citep{conneau2020emerging,karthikeyan2020crosslingual}, typological
-relatedness mattering more than shared script \citep{pires2019multilingual};
-evaluation-side overlap remains a known artifact \citep{artetxe2020translation}.
-That test changes the model. Section~\ref{sec:map} holds the model fixed and
-destroys the map inside the input while preserving surface statistics, which only
-a known map permits. That a language sample is not the independent draw its count
-implies is an established concern \citep{ploeger2026principled}, raised against
-sampling practice rather than converted into an effective sample size;
-Section~\ref{sec:trivial} performs that conversion, at 29 of 194 units. That
-label variation is signal and not noise is standard
+transfer reflects shared structure or lexical overlap was settled by removing the
+overlap from training, overlap proving not to be the mechanism
+\citep{conneau2020emerging,karthikeyan2020crosslingual} and typological
+relatedness mattering more than shared script \citep{pires2019multilingual}, with
+evaluation-side overlap a known artifact \citep{artetxe2020translation}; that test
+changes the model, where Section~\ref{sec:map} holds it fixed. That a language
+sample is not the independent draw its count implies is established
+\citep{ploeger2026principled} but is raised against sampling practice rather than
+converted into an effective sample size, which Section~\ref{sec:trivial} does at
+29 of 194 units. That label variation is signal is standard
 \citep{plank2022problem,pavlick2019inherent}, yet neither yields a bound on
-achievable correlation, which needs inputs sharing a label by construction rather
-than by judgement. Section~\ref{sec:ceiling} gets that set free from the genetic
-code. We claim no result about language. We claim that three concerns the field
-already holds become exactly measurable where the map is known, and we report what
-happens when they are measured.
+achievable correlation, which needs inputs sharing a label by construction;
+Section~\ref{sec:ceiling} gets that set free from the genetic code. We claim no
+result about language, only that three concerns the field already holds become
+exactly measurable where the map is known.
 
 \paragraph{Noise ceilings.} Attenuation corrections are standard in psychometrics
 and in neural encoding models, where repeat measurements bound explainable
@@ -675,6 +678,20 @@ test could not have detected an effect below $0.0573$, and a panel larger than 2
 assays could turn it into a small real effect. That would locate part of Evo~2's
 margin in corpus range, which is a result we would welcome, and it would still leave
 the 850-species model $0.20$ short of a substitution matrix.
+
+\paragraph{Convergence is bounded, not measured.} We do not compute
+representational alignment. Our evidence bears on convergence through its
+consequences --- converged representations should let a genomic score predict
+protein fitness, and past BLOSUM62 none does at any size we can run --- and
+through one representation-level probe that its own map control removes. A mutual
+$k$-nearest-neighbour measurement between protein and genomic embeddings of the
+same molecules, taken across the scale ladder and repeated under the manipulations
+of Section~\ref{sec:map}, is the experiment this framing asks for and we have not
+run it. The genetic code is also only one of the maps these models are credited
+with crossing: structure, regulatory grammar and cross-species correspondence each
+carry transfer claims of their own, under maps that are approximate rather than
+exact. The controls here get harder in that order, and the map control hardest of
+all.
 
 Every assay used here has homologs, so the regime where a sequence has no relatives
 is untested. The regulatory arm covers two small models and licenses nothing about
