@@ -318,7 +318,11 @@ acids held out:
 | one-hot -> NT | 0.713 | +0.533 |
 
 **A 60-parameter one-hot vector aligns with ESM-2 better than the genomic model
-does.** Whatever NT shares with ESM-2 is less than what residue identity alone
+does.** (Scoped as its own arm on 24 Nov 2026: `paper/DESIGN_ALIGNMENT.md` says
+what separates this from a claim about representational convergence, chiefly that
+linear CKA is not the mutual k-NN the hypothesis is stated in, that one size
+cannot test a trend, and that the map control was never applied to the alignment
+itself.) Whatever NT shares with ESM-2 is less than what residue identity alone
 shares with it, so there is nothing here that deserves the name cross-modal
 transfer. NT is best described as a noisy re-encoding of which residue sits
 where.
